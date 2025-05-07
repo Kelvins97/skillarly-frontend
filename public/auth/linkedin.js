@@ -7,7 +7,7 @@ const session = require('express-session');
 passport.use(new LinkedInStrategy({
   clientID: 'YOUR_LINKEDIN_CLIENT_ID',
   clientSecret: 'YOUR_LINKEDIN_CLIENT_SECRET',
-  callbackURL: 'https://skillarly-backend.onrender.com/auth/linkedin/callback',
+  callbackURL: 'https://skillarly.vercel.app/auth/linkedin/callback',
   scope: ['r_liteprofile', 'r_emailaddress'],
   state: true
 }, (accessToken, refreshToken, profile, done) => {
