@@ -67,6 +67,7 @@
     <section id="user-plan-section">
       <h2>Your Current Plan</h2>
       <p><strong>Plan:</strong> <span id="plan">Loading...</span></p>
+      <div id="subscription-status" class="hidden"></div>
       <div id="limit-banner" class="banner hidden">
         You've used all your profile scrapes for this month. Upgrade your plan to continue.
       </div>
@@ -198,24 +199,75 @@
         document.getElementById('limit-banner').classList.remove('hidden');
       }
     }
+    
+   //Subscriptions
+  document.getElementById('subscribe-button').addEventListener('click', async () => {
+  try {
+    const button = document.getElementById('subscribe-button');
+    const statusDiv = document.getElementById('subscription-status');
+    const originalButtonText = button.textContent;
+    
+    // Show loading state
+    button.disabled = true;
+    button.textContent = 'Processing...';
+    statusDiv.classList.add('hidden');
 
-    document.getElementById('subscribe-button').addEventListener('click', async () => {
-      const plan = document.querySelector('input[name="plan"]:checked').value;
-      const payment = document.querySelector('input[name="payment"]:checked').value;
+    const plan = document.querySelector('input[name="plan"]:checked').value;
+    const payment = document.querySelector('input[name="payment"]:checked').value;
 
-      const res = await fetch('/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, plan, paymentMethod: payment })
-      });
-
-      const result = await res.json();
-      if (payment === 'stripe' && result.stripeUrl) {
-        window.open(result.stripeUrl, '_blank');
-      } else if (payment === 'mpesa') {
-        alert(result.mpesaStatus === 'initiated' ? "M-Pesa push sent!" : "M-Pesa failed.");
-      }
+    const res = await fetch('/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, plan, paymentMethod: payment })
     });
+
+    const result = await res.json();
+    
+    if (!res.ok) throw new Error(result.message || 'Payment failed');
+
+    if (payment === 'stripe' && result.stripeUrl) {
+      // Redirect directly to Stripe instead of opening new window
+      window.location.href = result.stripeUrl;
+    } else if (payment === 'mpesa') {
+      if (result.mpesaStatus === 'initiated') {
+        statusDiv.classList.remove('hidden');
+        statusDiv.textContent = "📱 M-Pesa payment request sent! Check your phone.";
+        statusDiv.style.color = 'green';
+        
+        // Poll for payment confirmation
+        const poll = setInterval(async () => {
+          const statusRes = await fetch(`/payment-status?reference=${result.reference}`);
+          const statusData = await statusRes.json();
+          
+          if (statusData.status === 'completed') {
+            clearInterval(poll);
+            statusDiv.textContent = "✅ Payment successful! Updating your account...";
+            await loadPreferences();
+            setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+          }
+        }, 3000);
+      } else {
+        throw new Error('M-Pesa payment initiation failed');
+      }
+    }
+    
+    // Update user plan info after successful payment
+    if (result.success) {
+      await loadPreferences();
+    }
+
+  } catch (e) {
+    console.error(e);
+    const statusDiv = document.getElementById('subscription-status');
+    statusDiv.classList.remove('hidden');
+    statusDiv.textContent = `❌ Error: ${e.message}`;
+    statusDiv.style.color = 'red';
+  } finally {
+    const button = document.getElementById('subscribe-button');
+    button.disabled = false;
+    button.textContent = 'Subscribe';
+  }
+});
 
     fetchAndRenderRecommendations();
     loadPreferences();
