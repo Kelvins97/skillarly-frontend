@@ -12,7 +12,7 @@ const session = require('express-session');
 passport.use(new LinkedInStrategy({
   clientID: 'YOUR_LINKEDIN_CLIENT_ID',
   clientSecret: 'YOUR_LINKEDIN_CLIENT_SECRET',
-  callbackURL: 'https://skillarly.vercel.app/auth/linkedin/callback',
+  callbackURL: 'https://skillarly-backend.onrender.com/auth/linkedin/callback',
   scope: ['r_liteprofile', 'r_emailaddress'],
   state: true
 }, (accessToken, refreshToken, profile, done) => {
@@ -52,7 +52,7 @@ app.get('/auth/linkedin/callback',
     const profileUrl = req.user.profileUrl;
     
     // Redirect to the analysis page with secure token
-    res.redirect(`/mobile?profile=${encodeURIComponent(profileUrl)}&token=${generateSecureToken(req.user)}`);
+    res.redirect(`/index?profile=${encodeURIComponent(profileUrl)}&token=${generateSecureToken(req.user)}`);
   }
 );
 
