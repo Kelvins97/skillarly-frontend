@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Skillarly Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="apple-touch-icon" sizes="57x57" href="images/apple-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="images/apple-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="images/apple-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="images/apple-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="images/apple-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="images/apple-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="images/apple-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="images/apple-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-icon-180x180.png">
+  <link rel="icon" type="image/png" sizes="192x192"  href="images/android-icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="theme-toggle" id="themeToggle">🌙</div>
+
+  <div class="container">
+    <h1>Welcome to Skillarly</h1>
+    <p id="welcome"></p>
+
+    <!-- Spinner -->
+    <section id="recommendation-loader" class="hidden">
+      <div class="loader"></div>
+      <p>Fetching your personalized recommendations...</p>
+    </section>
+
+    <!-- Retry on fail -->
+    <section id="recommendation-error" class="hidden">
+      <p>Something went wrong. Please try again:</p>
+      <button onclick="fetchAndRenderRecommendations()">🔁 Retry</button>
+    </section>
+
+    <section>
+      <h2>🎓 Courses</h2>
+      <ul id="courses-list"></ul>
+    </section>
+
+    <section>
+      <h2>🎖️ Certifications</h2>
+      <ul id="certificates-list"></ul>
+    </section>
+
+    <section>
+      <h2>💼 Jobs</h2>
+      <ul id="jobs-list"></ul>
+    </section>
+
+    <section>
+      <h2>Notification Preferences</h2>
+      <label>
+        <input type="checkbox" id="email-toggle" />
+        Send AI recommendations to my email
+      </label>
+      <button onclick="saveNotificationSettings()">Save Preferences</button>
+    </section>
+
+    <section id="user-plan-section">
+      <h2>Your Current Plan</h2>
+      <p><strong>Plan:</strong> <span id="plan">Loading...</span></p>
+      <div id="limit-banner" class="banner hidden">
+        You've used all your profile scrapes for this month. Upgrade your plan to continue.
+      </div>
+      <p><strong>Scrapes Used:</strong> <span id="scrape-count">0</span></p>
+
+      <div id="upgrade-block" class="hidden">
+        <button onclick="document.getElementById('subscriptions-tab').scrollIntoView({ behavior: 'smooth' })">
+          Upgrade Plan
+        </button>
+      </div>
+    </section>
+
+    <section class="subscription-plans" id="subscriptions-tab">
+      <h2>Upgrade Your Plan</h2>
+      <div class="plan-grid">
+        <label class="plan-card">
+          <input type="radio" name="plan" value="basic" checked />
+          <h3>Basic</h3>
+          <p>Free – 2 scrapes/month</p>
+        </label>
+        <label class="plan-card">
+          <input type="radio" name="plan" value="pro" />
+          <h3>Pro</h3>
+          <p>$5/month – 10 scrapes</p>
+        </label>
+        <label class="plan-card">
+          <input type="radio" name="plan" value="premium" />
+          <h3>Premium</h3>
+          <p>$15/month – Unlimited</p>
+        </label>
+      </div>
+
+      <div class="payment-methods">
+        <label><input type="radio" name="payment" value="stripe" checked /> Stripe</label>
+        <label><input type="radio" name="payment" value="mpesa" /> M-Pesa</label>
+      </div>
+
+      <button id="subscribe-button">Subscribe</button>
+
+      <button onclick="logout()" class="secondary-button">Log Out</button>
+    </section>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Skillarly</p>
+  </footer>
+
+  <script>
+    // Theme toggle
+    const toggle = document.getElementById('themeToggle');
+    toggle.addEventListener('click', () => {
+      const isDark = document.body.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      toggle.textContent = isDark ? '☀️' : '🌙';
+    });
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark');
+      toggle.textContent = '☀️';
+    }
+
+    const email = new URLSearchParams(window.location.search).get('email');
+    document.getElementById('welcome').textContent = `Email: ${email}`;
+
+    async function fetchAndRenderRecommendations() {
+      document.getElementById('recommendation-loader').classList.remove('hidden');
+      document.getElementById('recommendation-error').classList.add('hidden');
+
+      try {
+        const res = await fetch('/recommendations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+        document.getElementById('recommendation-loader').classList.add('hidden');
+
+        if (!data.success) throw new Error('Recommendation failed');
+
+        renderList(data.courses, 'courses-list');
+        renderList(data.certifications, 'certificates-list');
+        renderList(data.jobs, 'jobs-list');
+      } catch (e) {
+        console.error(e);
+        document.getElementById('recommendation-loader').classList.add('hidden');
+        document.getElementById('recommendation-error').classList.remove('hidden');
+      }
+    }
+
+    function renderList(items, listId) {
+      const ul = document.getElementById(listId);
+      ul.innerHTML = '';
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${item.title}</strong><br><span>${item.description}</span> <br><a href="${item.link}" target="_blank">View</a>`;
+        ul.appendChild(li);
+      });
+    }
+
+    async function saveNotificationSettings() {
+      await fetch('/update-preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          email_notifications: document.getElementById('email-toggle').checked
+        })
+      });
+      alert('Preferences saved!');
+    }
+
+    async function loadPreferences() {
+      const res = await fetch(`/user-info?email=${email}`);
+      const user = await res.json();
+      document.getElementById('plan').textContent = user.plan || 'Basic';
+      document.getElementById('scrape-count').textContent = user.monthly_scrapes || 0;
+      document.getElementById('email-toggle').checked = user.email_notifications !== false;
+
+      if (user.plan === 'basic' && user.monthly_scrapes >= 2) {
+        document.getElementById('upgrade-block').classList.remove('hidden');
+        document.getElementById('limit-banner').classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('subscribe-button').addEventListener('click', async () => {
+      const plan = document.querySelector('input[name="plan"]:checked').value;
+      const payment = document.querySelector('input[name="payment"]:checked').value;
+
+      const res = await fetch('/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, plan, paymentMethod: payment })
+      });
+
+      const result = await res.json();
+      if (payment === 'stripe' && result.stripeUrl) {
+        window.open(result.stripeUrl, '_blank');
+      } else if (payment === 'mpesa') {
+        alert(result.mpesaStatus === 'initiated' ? "M-Pesa push sent!" : "M-Pesa failed.");
+      }
+    });
+
+    fetchAndRenderRecommendations();
+    loadPreferences();
+
+   //Log-Out
+   function logout() {
+   localStorage.clear(); // or: localStorage.removeItem('email');
+   window.location.href = '/index.html'; // or wherever your landing page is
+   }
+  </script>
+</body>
+</html>
