@@ -1,8 +1,3 @@
-// Server-side implementation for LinkedIn OAuth
-
-// 1. Install required packages
-// npm install passport passport-linkedin-oauth2 express-session
-
 const express = require('express');
 const passport = require('passport');
 const LinkedInStrategy = require('passport-linkedin-oauth2').Strategy;
@@ -52,7 +47,7 @@ app.get('/auth/linkedin/callback',
     const profileUrl = req.user.profileUrl;
     
     // Redirect to the analysis page with secure token
-    res.redirect(`/index?profile=${encodeURIComponent(profileUrl)}&token=${generateSecureToken(req.user)}`);
+    res.redirect(`https://skillarly.vercel.app/dashboard?profile=${encodeURIComponent(profileUrl)}&token=${generateSecureToken(req.user)}`);
   }
 );
 
