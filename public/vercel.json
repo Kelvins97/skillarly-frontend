@@ -1,18 +1,19 @@
 {
-  "version": 2,
-  "buildCommand": "",
-  "outputDirectory": "public",
-  "routes": [
-    {
-      "src": "/go",
-      "status": 307,
-      "headers": {
-        "Location": "/mobile.html"
+    "version": 2,
+    "public": true,
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "routes": [
+      {
+        "src": "/go",
+        "dest": "/mobile.html"
+      },
+      {
+        "handle": "filesystem"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "/index.html"
       }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ]
-}
+    ]
+  }
