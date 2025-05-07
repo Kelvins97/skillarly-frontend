@@ -1,19 +1,6 @@
 {
-    "version": 2,
-    "public": true,
-    "cleanUrls": true,
-    "trailingSlash": false,
-    "routes": [
-      {
-        "src": "/go",
-        "dest": "/mobile.html"
-      },
-      {
-        "handle": "filesystem"
-      },
-      {
-        "src": "/(.*)",
-        "dest": "/index.html"
-      }
-    ]
-  }
+  "version": 2,
+  "rewrites": [
+    { "source": "/go", "destination": "/mobile.html" }
+  ]
+}
