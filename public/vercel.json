@@ -2,7 +2,7 @@
   "version": 2,
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/go", "destination": "/index.html" }
+    { "source": "/go", "destination": "/index.html" },
      { "source": "/dashboard", "destination": "/dashboard.html" }
   ]
 }
