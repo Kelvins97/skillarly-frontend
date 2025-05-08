@@ -231,7 +231,7 @@
       <div id="loading" class="hidden">Processing your profile...</div>
       <div id="not-authenticated">
         <p>To analyze your LinkedIn profile, you need to authenticate with LinkedIn first.</p>
-        <button id="loginButton" class="linkedin-button" href="/auth/linkedin/">Sign in with LinkedIn </button>
+        <button id="loginButton" class="linkedin-button" href="https://skillarly-backend.onrender.com/auth/linkedin/">Sign in with LinkedIn </button>
       </div>
       <div id="content" class="hidden">
         <p>You're signed in! Ready to analyze your LinkedIn profile?</p>
@@ -269,7 +269,7 @@
       
       loginButton.addEventListener('click', function() {
         // Redirect to LinkedIn authentication
-        window.location.href = '/auth/linkedin';
+        window.location.href = 'https://skillarly-backend.onrender.com/auth/linkedin';
       });
       
       analyzeButton.addEventListener('click', async function() {
