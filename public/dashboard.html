@@ -423,6 +423,25 @@
               skillsContent.innerHTML = '<p>No skills data available.</p>';
             }
             
+            // Extract token from URL after redirect
+           const urlParams = new URLSearchParams(window.location.search);
+           const token = urlParams.get('token');
+
+           // Store token in localStorage/sessionStorage
+           if (token) {
+           localStorage.setItem('linkedin_token', token);
+           window.history.replaceState({}, document.title, "/dashboard"); // Clean URL
+            }
+
+           // Use token for API calls
+           fetch('https://skillarly-backendonrender.com/scrape-profile', {
+           method: 'POST',
+           headers: {
+           'Authorization': `Bearer ${localStorage.getItem('linkedin_token')}`
+           }
+           });
+
+
             // Show dashboard and fetch recommendations
             loading.classList.add('hidden');
             dashboard.classList.remove('hidden');
