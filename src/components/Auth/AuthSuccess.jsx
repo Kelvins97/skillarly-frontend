@@ -1,14 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function AuthSuccess() {
   const [status, setStatus] = useState('Processing authentication...');
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Extract token from URL parameters
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
+    console.log('AuthSuccess component mounted');
+    console.log('Current URL:', window.location.href);
+    
+    // First try getting token from URL parameters
+    const params = new URLSearchParams(location.search);
+    let token = params.get('token');
+    
+    // If not found in URL params, try checking hash fragment
+    if (!token && location.hash) {
+      const hashParams = new URLSearchParams(location.hash.substring(1));
+      token = hashParams.get('token');
+    }
+
+    console.log('Token found:', token ? 'Yes' : 'No');
 
     if (!token) {
       setStatus('Error: No authentication token found');
@@ -21,6 +33,7 @@ function AuthSuccess() {
       
       // Decode token payload to get user info (without requiring jwt library)
       const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('Token decoded successfully');
       
       // Store user info if needed
       localStorage.setItem('skillarly_user', JSON.stringify({
@@ -34,14 +47,15 @@ function AuthSuccess() {
       
       // Short timeout to allow user to see success message
       setTimeout(() => {
+        console.log('Redirecting to dashboard...');
         navigate('/dashboard');
       }, 1500);
       
     } catch (error) {
       console.error('Token processing error:', error);
-      setStatus('Authentication error. Please try again.');
+      setStatus(`Authentication error: ${error.message}. Please try again.`);
     }
-  }, [navigate]);
+  }, [navigate, location]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
