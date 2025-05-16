@@ -3,10 +3,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { isAuthenticated } from './utils/auth';
 
 // Import your components
-import AuthSuccess from '/components/auth/AuthSuccess';
-import Dashboard from '/components/Dashboard';
-import Login from '/components/auth/Login';
-import Landing from '/components/LandingPage'; // Make sure you have this component
+import AuthSuccess from './components/auth/AuthSuccess';
+import Dashboard from './components/Dashboard';
+import Login from './components/auth/Login';
+import Landing from './components/LandingPage'; // Make sure you have this component
 
 // Protected route wrapper
 const ProtectedRoute = ({ element }) => {
