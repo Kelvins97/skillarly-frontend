@@ -10,6 +10,11 @@ function AuthSuccess() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
 
+    console.log("Token param:", token);
+
+    console.log("🔥 AuthSuccess component loaded");
+
+
     if (!token) {
       setStatus('Error: No authentication token found');
       return;
@@ -49,7 +54,8 @@ function AuthSuccess() {
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
           LinkedIn Authentication
         </h2>
-        
+        <h1>🔥 Auth Success View</h1>
+
         <div className="text-center">
           {status === 'Authentication successful! Redirecting...' ? (
             <>
