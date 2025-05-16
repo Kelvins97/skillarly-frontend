@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { isAuthenticated } from './utils/auth';
 
 // Import your components
-import AuthSuccess from './components/Auth/AuthSuccess';
+import AuthSuccess from './components/Auth/AuthSuccess.jsx';
 import Dashboard from './components/Dashboard';
 //import Login from './components/Auth/Login';
 import Landing from './components/Landing'; // Make sure you have this component
