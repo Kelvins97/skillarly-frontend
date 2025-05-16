@@ -6,7 +6,7 @@ import { isAuthenticated } from './utils/auth';
 import AuthSuccess from './components/Auth/AuthSuccess';
 import Dashboard from './components/Dashboard';
 import Login from './components/Auth/Login';
-import Landing from './components/Landing'; // Make sure you have this component
+import Landing from './components/LandingPage'; // Make sure you have this component
 
 // Protected route wrapper
 const ProtectedRoute = ({ element }) => {
