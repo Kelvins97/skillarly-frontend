@@ -5,7 +5,7 @@ import { isAuthenticated } from './utils/auth';
 // Import your components
 import AuthSuccess from './components/Auth/AuthSuccess';
 import Dashboard from './components/Dashboard';
-import Login from './components/Auth/Login';
+//import Login from './components/Auth/Login';
 import Landing from './components/Landing'; // Make sure you have this component
 
 // Protected route wrapper
