@@ -1,5 +1,3 @@
-// auth.js - Authentication utilities
-
 // Check if user is authenticated
 export const isAuthenticated = () => {
   const token = localStorage.getItem('skillarly_auth_token');
