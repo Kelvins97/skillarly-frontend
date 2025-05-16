@@ -1,9 +1,8 @@
 {
   "rewrites": [
+    { "source": "/auth/success", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
-  "routes": [
-    { "src": "/auth/success", "dest": "/index.html" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
+  "trailingSlash": false,
+  "cleanUrls": true
 }
