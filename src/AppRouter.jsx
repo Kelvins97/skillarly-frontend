@@ -8,9 +8,6 @@ import Dashboard from './components/Dashboard';
 import Login from './components/auth/Login';
 import Landing from './components/LandingPage'; // Make sure you have this component
 
-<Route path="/" element={<AuthSuccess />} />
-
-
 // Protected route wrapper
 const ProtectedRoute = ({ element }) => {
   return isAuthenticated() ? element : <Navigate to="/login" />;
