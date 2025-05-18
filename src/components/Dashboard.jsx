@@ -395,12 +395,17 @@ const Dashboard = () => {
         </div>
 
         <div className="payment-methods">
-          <label>
-            <input type="radio" name="payment" value="stripe" defaultChecked /> Stripe
-          </label>
-          <label>
-            <input type="radio" name="payment" value="mpesa" /> M-Pesa
-          </label>
+          <h3>Payment Method</h3>
+          <div className="payment-options">
+            <label>
+              <input type="radio" name="payment" value="stripe" defaultChecked /> 
+              <span>Stripe</span>
+            </label>
+            <label>
+              <input type="radio" name="payment" value="mpesa" /> 
+              <span>M-Pesa</span>
+            </label>
+          </div>
         </div>
 
         <button onClick={handleSubscribe}>Subscribe</button>
