@@ -15,6 +15,14 @@ const Dashboard = () => {
   const themeToggleRef = useRef();
   const navigate = useNavigate();
 
+  // Function to get time-based greeting
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
   useEffect(() => {
     // Get user and token from localStorage using your auth utilities
     const user = getUser();
@@ -245,10 +253,23 @@ const Dashboard = () => {
       <section className="profile-section">
         <h2>Profile Summary</h2>
         <div className="profile-card">
-          <img src={userData?.profilePicture || '/img/default-avatar.png'} alt="Profile" />
-          <h3>{userData?.name || 'LinkedIn User'}</h3>
-          <p>{userData?.headline || 'Professional'}</p>
-          <p>Email: {userData?.email}</p>
+          <div className="profile-content">
+            <div className="profile-image-container">
+              <img 
+                src={userData?.profilePicture || '/img/default-avatar.png'} 
+                alt="Profile" 
+                className="profile-image"
+              />
+            </div>
+            <div className="profile-details">
+              <div className="greeting-container">
+                <span className="greeting">{getTimeBasedGreeting()},</span>
+                <h3 className="user-name">{userData?.name || 'LinkedIn User'}</h3>
+              </div>
+              <p className="user-headline">{userData?.headline || 'Professional'}</p>
+              <p className="user-email">Email: {userData?.email}</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -386,7 +407,7 @@ const Dashboard = () => {
         <button onClick={handleLogout} className="secondary-button">Log Out</button>
       </section>
 
-      <footer>
+      <footer className="dashboard-footer">
         <p>&copy; {new Date().getFullYear()} Skillarly</p>
       </footer>
     </div>
