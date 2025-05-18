@@ -17,7 +17,7 @@ function Login() {
     setIsLoading(true);
     
     // Your backend API endpoint that generates the LinkedIn OAuth URL
-    const backendUrl = process.env.REACT_APP_API_URL || 'https://skillarly-backend.onrender.com/';
+    const backendUrl = process.env.REACT_APP_API_URL || 'https://skillarly-backend.onrender.com';
     
     // Redirect to your backend endpoint that will redirect to LinkedIn
     window.location.href = `${backendUrl}/auth/linkedin`;
