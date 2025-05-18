@@ -294,3 +294,324 @@ body.dark li {
 }
 
 }
+
+/* Enhanced Profile Section Styles */
+.profile-section {
+  margin-bottom: 2rem;
+}
+
+.profile-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.profile-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.profile-content {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.profile-image-container {
+  flex-shrink: 0;
+}
+
+.profile-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #007acc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.greeting-container {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.greeting {
+  font-size: 1.1rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.user-name {
+  font-size: 1.5rem;
+  margin: 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.user-headline {
+  margin: 0;
+  color: #666;
+  font-size: 1rem;
+  font-style: italic;
+}
+
+.user-email {
+  margin: 0;
+  color: #007acc;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Dark theme support for profile section */
+body.dark .profile-card {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+body.dark .user-name {
+  color: #fff;
+}
+
+body.dark .greeting {
+  color: #ccc;
+}
+
+body.dark .user-headline {
+  color: #aaa;
+}
+
+body.dark .user-email {
+  color: #4db8e8;
+}
+
+/* Footer Optimization */
+.dashboard-footer {
+  margin-top: 3rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  text-align: center;
+  width: 100%;
+}
+
+.dashboard-footer p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+body.dark .dashboard-footer {
+  background: #1a1a1a;
+  border-top-color: #333;
+}
+
+body.dark .dashboard-footer p {
+  color: #ccc;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profile-content {
+    gap: 1rem;
+  }
+  
+  .profile-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .greeting-container {
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
+  }
+  
+  .user-name {
+    font-size: 1.3rem;
+  }
+  
+  .greeting {
+    font-size: 1rem;
+  }
+  
+  .profile-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .profile-details {
+    align-items: center;
+  }
+  
+  .greeting-container {
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .dashboard-footer {
+    padding: 1rem 0;
+  }
+}
+
+/* Container adjustments for better spacing */
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container > section:last-of-type {
+  flex: 1;
+}
+
+/* Enhanced button styles for better UX */
+button {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Plan grid responsiveness */
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+@media (max-width: 768px) {
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Skills list enhancement */
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+}
+
+.skills-list li {
+  background: #007acc;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.skills-list li:hover {
+  background: #005c9a;
+}
+
+body.dark .skills-list li {
+  background: #4db8e8;
+  color: #1a1a1a;
+}
+
+body.dark .skills-list li:hover {
+  background: #3a9bc1;
+}
+
+/* Loading container improvements */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 1rem;
+}
+
+.loader {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007acc;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Auth container improvements */
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.auth-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+body.dark .auth-card {
+  background: #2a2a2a;
+  color: white;
+}
+
+/* Theme toggle improvements */
+#themeToggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #007acc;
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#themeToggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
