@@ -10,11 +10,6 @@ function AuthSuccess() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
 
-    console.log("Token param:", token);
-
-    console.log("🔥 AuthSuccess component loaded");
-
-
     if (!token) {
       setStatus('Error: No authentication token found');
       return;
@@ -49,29 +44,110 @@ function AuthSuccess() {
   }, [navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
-          LinkedIn Authentication
-        </h2>
-        <h1>🔥 Auth Success View</h1>
-
-        <div className="text-center">
-          {status === 'Authentication successful! Redirecting...' ? (
-            <>
-              <div className="text-green-600 mb-4">✓ {status}</div>
-              <div className="animate-pulse mt-4">
-                <div className="h-2 bg-gray-200 rounded"></div>
-              </div>
-            </>
-          ) : status.includes('Error') ? (
-            <div className="text-red-600">{status}</div>
-          ) : (
-            <>
-              <div className="text-gray-600 mb-4">{status}</div>
-              <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent mx-auto"></div>
-            </>
-          )}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8">
+      <div className="w-full max-w-sm sm:max-w-md md:max-w-lg">
+        <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 text-center">
+          {/* Header */}
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Skillarly
+            </h1>
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-700">
+              LinkedIn Authentication
+            </h2>
+          </div>
+          
+          {/* Status Content */}
+          <div className="flex flex-col items-center justify-center space-y-4 sm:space-y-6">
+            {status === 'Authentication successful! Redirecting...' ? (
+              <>
+                {/* Success Icon */}
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg 
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M5 13l4 4L19 7" 
+                    />
+                  </svg>
+                </div>
+                
+                {/* Success Message */}
+                <div className="text-green-700 text-sm sm:text-base md:text-lg font-medium">
+                  {status}
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
+                  <div className="bg-green-600 h-2 sm:h-3 rounded-full animate-pulse"></div>
+                </div>
+              </>
+            ) : status.includes('Error') ? (
+              <>
+                {/* Error Icon */}
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center">
+                  <svg 
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M6 18L18 6M6 6l12 12" 
+                    />
+                  </svg>
+                </div>
+                
+                {/* Error Message */}
+                <div className="text-red-700 text-sm sm:text-base md:text-lg font-medium">
+                  {status}
+                </div>
+                
+                {/* Retry Button */}
+                <button
+                  onClick={() => navigate('/login')}
+                  className="mt-4 px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white text-sm sm:text-base font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Try Again
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Loading Icon */}
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                  <div className="animate-spin w-6 h-6 sm:w-8 sm:h-8 border-2 sm:border-3 border-blue-600 rounded-full border-t-transparent"></div>
+                </div>
+                
+                {/* Loading Message */}
+                <div className="text-gray-700 text-sm sm:text-base md:text-lg font-medium">
+                  {status}
+                </div>
+                
+                {/* Loading Dots */}
+                <div className="flex space-x-1 sm:space-x-2">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-600 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
+            <p className="text-xs sm:text-sm text-gray-500">
+              Please wait while we complete your authentication
+            </p>
+          </div>
         </div>
       </div>
     </div>
