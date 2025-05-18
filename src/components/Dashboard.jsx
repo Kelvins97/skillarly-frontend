@@ -50,7 +50,7 @@ const Dashboard = () => {
         setAuthenticated(true);
 
         // Fetch additional user data from your backend
-        const response = await fetch(`https://skillarly-backend.onrender.com/api/user-data?userId=${user.id}`, {
+        const response = await fetch(`https://skillarly-backend.onrender.com/user-data?userId=${user.id}`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
