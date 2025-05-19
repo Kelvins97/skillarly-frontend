@@ -12,8 +12,13 @@ const Dashboard = () => {
   const [plan, setPlan] = useState('Loading...');
   const [scrapeCount, setScrapeCount] = useState(0);
   const [upgradeBanner, setUpgradeBanner] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const themeToggleRef = useRef();
   const navigate = useNavigate();
+
+  // Base URL for your backend
+  const BACKEND_URL = 'https://skillarly-backend.onrender.com';
 
   // Function to get time-based greeting
   const getTimeBasedGreeting = () => {
@@ -21,6 +26,45 @@ const Dashboard = () => {
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
+  };
+
+  // Helper function to make authenticated API calls
+  const apiCall = async (endpoint, options = {}) => {
+    const token = getAuthToken();
+    const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}${endpoint}`;
+    
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    try {
+      const response = await fetch(url, config);
+      
+      // Check if token is invalid
+      if (response.status === 401) {
+        console.log('Token expired or invalid, logging out');
+        logout();
+        navigate('/login');
+        return null;
+      }
+
+      // Parse response
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || `Request failed with status ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error(`API call to ${endpoint} failed:`, error);
+      throw error;
+    }
   };
 
   useEffect(() => {
@@ -49,61 +93,48 @@ const Dashboard = () => {
         
         setAuthenticated(true);
 
-        // Fetch additional user data from your backend
-        const response = await fetch(`https://skillarly-backend.onrender.com/user-data?userId=${user.id}`, {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            // Merge the additional data with existing user data
-            setUserData(prev => ({ ...prev, ...data }));
-          }
-        }
-
-        // Fetch recommendations
+        // Fetch user info (plan, scrapes, etc.) - this route accepts JWT auth
         try {
-          const recResponse = await fetch('https://skillarly-backend.onrender.com/recommendations', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ email: user.email, userId: user.id }),
-          });
-          
-          if (recResponse.ok) {
-            const recData = await recResponse.json();
-            setRecommendations(recData);
-          }
-        } catch (error) {
-          console.error('Error fetching recommendations:', error);
-        }
-
-        // Fetch user plan info
-        try {
-          const planResponse = await fetch(`https://skillarly-backend.onrender.com/user-info?email=${user.email}&userId=${user.id}`, {
-            headers: { 
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (planResponse.ok) {
-            const info = await planResponse.json();
-            setPlan(info.plan || 'Basic');
-            setScrapeCount(info.monthly_scrapes || 0);
-            setPreferences({ email_notifications: info.email_notifications !== false });
-            if (info.plan === 'basic' && info.monthly_scrapes >= 2) {
+          const userInfo = await apiCall('/user-info');
+          if (userInfo && userInfo.success) {
+            setPlan(userInfo.plan || 'Basic');
+            setScrapeCount(userInfo.monthly_scrapes || 0);
+            setPreferences({ email_notifications: userInfo.email_notifications !== false });
+            
+            // Check if upgrade banner should be shown
+            if (userInfo.plan === 'basic' && userInfo.monthly_scrapes >= 2) {
               setUpgradeBanner(true);
             }
+
+            // Update user data with additional info
+            setUserData(prev => ({
+              ...prev,
+              plan: userInfo.plan,
+              monthly_scrapes: userInfo.monthly_scrapes,
+              email_notifications: userInfo.email_notifications
+            }));
           }
         } catch (error) {
-          console.error('Error fetching plan info:', error);
+          console.error('Error fetching user info:', error);
+          setErrors(prev => ({ ...prev, userInfo: 'Failed to load user information' }));
+        }
+
+        // Fetch additional user data (skills, certifications, etc.) - this route accepts JWT auth
+        try {
+          const additionalData = await apiCall('/api/user-data');
+          if (additionalData && additionalData.success) {
+            // Merge the additional data with existing user data
+            setUserData(prev => ({ 
+              ...prev, 
+              ...additionalData,
+              // Keep the original email and id from localStorage
+              email: prev.email,
+              id: prev.id
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching additional user data:', error);
+          setErrors(prev => ({ ...prev, userData: 'Failed to load profile data' }));
         }
 
       } catch (error) {
@@ -116,6 +147,33 @@ const Dashboard = () => {
 
     fetchUserData();
   }, [navigate]);
+
+  // Separate function to fetch recommendations
+  const fetchRecommendations = async () => {
+    setIsLoadingRecommendations(true);
+    try {
+      const recData = await apiCall('/recommendations', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          skills: userData?.skills || []
+        }),
+      });
+      
+      if (recData && recData.success) {
+        setRecommendations({
+          courses: recData.courses || [],
+          certifications: recData.certifications || [],
+          jobs: recData.jobs || []
+        });
+        setErrors(prev => ({ ...prev, recommendations: null }));
+      }
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+      setErrors(prev => ({ ...prev, recommendations: 'Failed to load recommendations' }));
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
+  };
 
   useEffect(() => {
     if (loading) return;
@@ -144,68 +202,56 @@ const Dashboard = () => {
   }, [loading]);
 
   const saveNotificationSettings = async () => {
-    const user = getUser();
-    const token = getAuthToken();
-    
     try {
-      const response = await fetch('https://skillarly-backend.onrender.com/update-preferences', {
+      const result = await apiCall('/update-preferences', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ 
-          email: user.email, 
-          userId: user.id, 
-          email_notifications: preferences.email_notifications 
+          email_notifications: preferences.email_notifications,
+          frequency: 'weekly' // You can make this configurable
         }),
       });
       
-      if (response.ok) {
-        alert('Preferences saved!');
-      } else {
-        alert('Error saving preferences');
+      if (result && result.success) {
+        alert('Preferences saved successfully!');
+        setErrors(prev => ({ ...prev, preferences: null }));
       }
     } catch (error) {
       console.error('Error saving preferences:', error);
-      alert('Error saving preferences');
+      setErrors(prev => ({ ...prev, preferences: 'Failed to save preferences' }));
+      alert('Error saving preferences. Please try again.');
     }
   };
 
   const handleSubscribe = async () => {
-    const user = getUser();
-    const token = getAuthToken();
-    const plan = document.querySelector('input[name="plan"]:checked')?.value;
-    const payment = document.querySelector('input[name="payment"]:checked')?.value;
+    const selectedPlan = document.querySelector('input[name="plan"]:checked')?.value;
+    const selectedPayment = document.querySelector('input[name="payment"]:checked')?.value;
 
-    if (!plan || !payment) {
+    if (!selectedPlan || !selectedPayment) {
       alert('Please select a plan and payment method');
       return;
     }
 
     try {
-      const res = await fetch('https://skillarly-backend.onrender.com/subscribe', {
+      const result = await apiCall('/subscription', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ 
-          email: user.email, 
-          userId: user.id, 
-          plan, 
-          paymentMethod: payment 
+          plan: selectedPlan, 
+          paymentMethod: selectedPayment 
         }),
       });
       
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message);
-      if (payment === 'stripe' && result.stripeUrl) {
-        window.location.href = result.stripeUrl;
+      if (result) {
+        if (selectedPayment === 'stripe' && result.stripeUrl) {
+          window.location.href = result.stripeUrl;
+        } else if (result.success) {
+          alert('Subscription updated successfully!');
+          // Refresh user data to get updated plan
+          window.location.reload();
+        }
       }
     } catch (error) {
       console.error('Subscription error:', error);
-      alert('Error processing subscription');
+      alert(`Error processing subscription: ${error.message}`);
     }
   };
 
@@ -250,6 +296,19 @@ const Dashboard = () => {
         <h1>Skillarly Dashboard</h1>
       </header>
 
+      {/* Error Display */}
+      {Object.keys(errors).length > 0 && (
+        <div className="error-banner">
+          {Object.entries(errors).map(([key, message]) => 
+            message && (
+              <div key={key} className="error-message">
+                <strong>Error ({key}):</strong> {message}
+              </div>
+            )
+          )}
+        </div>
+      )}
+
       <section className="profile-section">
         <h2>Profile Summary</h2>
         <div className="profile-card">
@@ -259,6 +318,9 @@ const Dashboard = () => {
                 src={userData?.profilePicture || '/img/default-avatar.png'} 
                 alt="Profile" 
                 className="profile-image"
+                onError={(e) => {
+                  e.target.src = '/img/default-avatar.png';
+                }}
               />
             </div>
             <div className="profile-details">
@@ -279,21 +341,44 @@ const Dashboard = () => {
           <ul className="skills-list">
             {userData.skills.map((s, i) => <li key={i}>{s}</li>)}
           </ul>
-        ) : <p>No skills data available.</p>}
+        ) : <p>No skills data available. Try scraping your LinkedIn profile to get personalized recommendations.</p>}
       </section>
 
       <section>
         <h2>Personalized Recommendations</h2>
+        {userData?.skills?.length > 0 && (
+          <div className="recommendations-header">
+            <button 
+              onClick={fetchRecommendations} 
+              disabled={isLoadingRecommendations}
+              className="fetch-recommendations-btn"
+            >
+              {isLoadingRecommendations ? 'Loading...' : 'Generate Recommendations'}
+            </button>
+          </div>
+        )}
+        
+        {errors.recommendations && (
+          <div className="error-message">
+            {errors.recommendations}
+          </div>
+        )}
+
         <h3>🎓 Courses</h3>
         <ul>
           {recommendations.courses.length > 0 ? 
             recommendations.courses.map((item, i) => (
               <li key={i}>
-                <strong>{item.title}</strong><br />
-                <span>{item.description}</span><br />
-                <a href={item.link} target="_blank" rel="noreferrer">View</a>
+                <strong>{item.title || item}</strong><br />
+                {item.description && <span>{item.description}</span>}
+                {item.link && (
+                  <>
+                    <br />
+                    <a href={item.link} target="_blank" rel="noreferrer">View Course</a>
+                  </>
+                )}
               </li>
-            )) : <li>No course recommendations available</li>
+            )) : <li>No course recommendations available. Generate recommendations to see suggestions.</li>
           }
         </ul>
         
@@ -302,11 +387,16 @@ const Dashboard = () => {
           {recommendations.certifications.length > 0 ? 
             recommendations.certifications.map((item, i) => (
               <li key={i}>
-                <strong>{item.title}</strong><br />
-                <span>{item.description}</span><br />
-                <a href={item.link} target="_blank" rel="noreferrer">View</a>
+                <strong>{item.title || item}</strong><br />
+                {item.description && <span>{item.description}</span>}
+                {item.link && (
+                  <>
+                    <br />
+                    <a href={item.link} target="_blank" rel="noreferrer">View Certification</a>
+                  </>
+                )}
               </li>
-            )) : <li>No certification recommendations available</li>
+            )) : <li>No certification recommendations available. Generate recommendations to see suggestions.</li>
           }
         </ul>
         
@@ -315,17 +405,22 @@ const Dashboard = () => {
           {recommendations.jobs.length > 0 ? 
             recommendations.jobs.map((item, i) => (
               <li key={i}>
-                <strong>{item.title}</strong><br />
+                <strong>{item.title}</strong> at {item.company}<br />
                 <span>{item.description}</span><br />
-                <a href={item.link} target="_blank" rel="noreferrer">View</a>
+                <a href={item.link} target="_blank" rel="noreferrer">View Job</a>
               </li>
-            )) : <li>No job recommendations available</li>
+            )) : <li>No job recommendations available. Generate recommendations to see suggestions.</li>
           }
         </ul>
       </section>
 
       <section>
         <h2>Notification Preferences</h2>
+        {errors.preferences && (
+          <div className="error-message">
+            {errors.preferences}
+          </div>
+        )}
         <label>
           <input 
             type="checkbox" 
