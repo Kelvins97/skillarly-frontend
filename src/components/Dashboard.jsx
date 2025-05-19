@@ -40,11 +40,14 @@ const Dashboard = () => {
     // Use the user data from localStorage and fetch additional data
     const fetchUserData = async () => {
       try {
-        // Set initial user data from auth
+        // Set initial user data from auth, including the LinkedIn profile picture
         setUserData({
           name: user.name,
           email: user.email,
-          id: user.id
+          id: user.id,
+          picture: user.picture, // LinkedIn profile picture from JWT
+          given_name: user.given_name,
+          family_name: user.family_name
         });
         
         setAuthenticated(true);
@@ -61,7 +64,12 @@ const Dashboard = () => {
           const data = await response.json();
           if (data.success) {
             // Merge the additional data with existing user data
-            setUserData(prev => ({ ...prev, ...data }));
+            // Preserve the picture from JWT if backend doesn't have it
+            setUserData(prev => ({ 
+              ...prev, 
+              ...data,
+              picture: data.picture || prev.picture // Keep LinkedIn picture as fallback
+            }));
           }
         }
 
@@ -214,6 +222,12 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  // Handle image load errors by falling back to default avatar
+  const handleImageError = (e) => {
+    console.log('Profile image failed to load, using default avatar');
+    e.target.src = '/img/default-avatar.png';
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -256,9 +270,11 @@ const Dashboard = () => {
           <div className="profile-content">
             <div className="profile-image-container">
               <img 
-                src={userData?.profilePicture || '/img/default-avatar.png'} 
-                alt="Profile" 
+                src={userData?.picture || '/img/default-avatar.png'} 
+                alt={`${userData?.name || 'User'}'s profile picture`}
                 className="profile-image"
+                onError={handleImageError}
+                crossOrigin="anonymous"
               />
             </div>
             <div className="profile-details">
@@ -268,6 +284,11 @@ const Dashboard = () => {
               </div>
               <p className="user-headline">{userData?.headline || 'Professional'}</p>
               <p className="user-email">Email: {userData?.email}</p>
+              {userData?.given_name && userData?.family_name && (
+                <p className="user-full-name">
+                  Full Name: {userData.given_name} {userData.family_name}
+                </p>
+              )}
             </div>
           </div>
         </div>
