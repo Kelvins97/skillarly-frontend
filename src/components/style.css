@@ -615,3 +615,161 @@ body.dark .auth-card {
   transform: scale(1.1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
+/* Add these styles to your existing style.css */
+
+/* Error handling styles */
+.error-banner {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #833;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 8px;
+}
+
+.error-message {
+  margin: 5px 0;
+  padding: 8px;
+  background-color: #fff5f5;
+  border-left: 4px solid #f56565;
+  border-radius: 4px;
+}
+
+/* Recommendations section improvements */
+.recommendations-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.fetch-recommendations-btn {
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.fetch-recommendations-btn:hover:not(:disabled) {
+  background-color: #0052a3;
+}
+
+.fetch-recommendations-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Loading container improvements */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0066cc;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Auth container improvements */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  padding: 20px;
+}
+
+.auth-card {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.auth-card h2 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.auth-card p {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.linkedin-button {
+  background-color: #0077b5;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 0.3s;
+}
+
+.linkedin-button:hover {
+  background-color: #005885;
+}
+
+/* Dark mode error styles */
+body.dark .error-banner {
+  background-color: #2d1b1b;
+  border-color: #4a1f1f;
+  color: #ff9999;
+}
+
+body.dark .error-message {
+  background-color: #2d1b1b;
+  border-left-color: #ff6b6b;
+  color: #ffcccc;
+}
+
+body.dark .auth-card {
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .plan-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .auth-card {
+    padding: 30px 20px;
+    margin: 10px;
+  }
+  
+  .recommendations-header {
+    margin-bottom: 15px;
+  }
+  
+  .fetch-recommendations-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
