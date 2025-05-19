@@ -165,7 +165,7 @@ const LandingPage = () => {
           color: white;
           border: none;
           padding: 12px 24px;
-          border-radius: 6px;
+          border-radius: 30px;
           cursor: pointer;
           font-size: 16px;
           font-weight: 500;
