@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [plan, setPlan] = useState('Loading...');
   const [scrapeCount, setScrapeCount] = useState(0);
   const [upgradeBanner, setUpgradeBanner] = useState(false);
+  const [apiErrors, setApiErrors] = useState({});
   const themeToggleRef = useRef();
   const navigate = useNavigate();
 
@@ -21,6 +22,54 @@ const Dashboard = () => {
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
+  };
+
+  // Function to get default avatar URL (you can replace this with your preferred default avatar)
+  const getDefaultAvatar = () => {
+    // Use a placeholder service with the user's name
+    const userName = userData?.name || 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0ea5e9&color=fff&size=150&font-size=0.6`;
+  };
+
+  // Function to get the profile picture URL with fallbacks
+  const getProfilePictureUrl = () => {
+    // First, try to get from userData (which comes from backend API)
+    if (userData?.profilePicture) {
+      return userData.profilePicture;
+    }
+    
+    // Second, try to get from the JWT token (stored in localStorage)
+    const user = getUser();
+    if (user?.profilePicture) {
+      return user.profilePicture;
+    }
+    
+    // Third, check if there's a stored profile picture URL in localStorage
+    const storedProfilePic = localStorage.getItem('userProfilePicture');
+    if (storedProfilePic) {
+      return storedProfilePic;
+    }
+    
+    // Finally, fall back to the default avatar
+    return getDefaultAvatar();
+  };
+
+  // Enhanced error handling for API calls
+  const handleApiCall = async (url, options = {}) => {
+    try {
+      const response = await fetch(url, options);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`API call failed for ${url}:`, error);
+      setApiErrors(prev => ({ ...prev, [url]: error.message }));
+      throw error;
+    }
   };
 
   useEffect(() => {
@@ -44,30 +93,38 @@ const Dashboard = () => {
         setUserData({
           name: user.name,
           email: user.email,
-          id: user.id
+          id: user.id,
+          profilePicture: user.profilePicture // Include profile picture from JWT
         });
+        
+        // Store profile picture in localStorage for quick access
+        if (user.profilePicture) {
+          localStorage.setItem('userProfilePicture', user.profilePicture);
+        }
         
         setAuthenticated(true);
 
         // Fetch additional user data from your backend
-        const response = await fetch(`https://skillarly-backend.onrender.com/user-data?userId=${user.id}`, {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-        });
+        try {
+          const data = await handleApiCall(`https://skillarly-backend.onrender.com/user-data?userId=${user.id}`, {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+          });
 
-        if (response.ok) {
-          const data = await response.json();
           if (data.success) {
             // Merge the additional data with existing user data
             setUserData(prev => ({ ...prev, ...data }));
           }
+        } catch (error) {
+          console.warn('Failed to fetch additional user data:', error.message);
+          // Continue with basic user data from auth
         }
 
-        // Fetch recommendations
+        // Fetch recommendations with error handling
         try {
-          const recResponse = await fetch('https://skillarly-backend.onrender.com/recommendations', {
+          const recData = await handleApiCall('https://skillarly-backend.onrender.com/recommendations', {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
@@ -76,34 +133,34 @@ const Dashboard = () => {
             body: JSON.stringify({ email: user.email, userId: user.id }),
           });
           
-          if (recResponse.ok) {
-            const recData = await recResponse.json();
-            setRecommendations(recData);
-          }
+          setRecommendations(recData);
         } catch (error) {
-          console.error('Error fetching recommendations:', error);
+          console.warn('Failed to fetch recommendations:', error.message);
+          // Set default empty recommendations
+          setRecommendations({ courses: [], certifications: [], jobs: [] });
         }
 
-        // Fetch user plan info
+        // Fetch user plan info with error handling
         try {
-          const planResponse = await fetch(`https://skillarly-backend.onrender.com/user-info?email=${user.email}&userId=${user.id}`, {
+          const info = await handleApiCall(`https://skillarly-backend.onrender.com/user-info?email=${user.email}&userId=${user.id}`, {
             headers: { 
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
           });
           
-          if (planResponse.ok) {
-            const info = await planResponse.json();
-            setPlan(info.plan || 'Basic');
-            setScrapeCount(info.monthly_scrapes || 0);
-            setPreferences({ email_notifications: info.email_notifications !== false });
-            if (info.plan === 'basic' && info.monthly_scrapes >= 2) {
-              setUpgradeBanner(true);
-            }
+          setPlan(info.plan || 'Basic');
+          setScrapeCount(info.monthly_scrapes || 0);
+          setPreferences({ email_notifications: info.email_notifications !== false });
+          if (info.plan === 'basic' && info.monthly_scrapes >= 2) {
+            setUpgradeBanner(true);
           }
         } catch (error) {
-          console.error('Error fetching plan info:', error);
+          console.warn('Failed to fetch plan info:', error.message);
+          // Set default values
+          setPlan('Basic');
+          setScrapeCount(0);
+          setPreferences({ email_notifications: false });
         }
 
       } catch (error) {
@@ -148,7 +205,7 @@ const Dashboard = () => {
     const token = getAuthToken();
     
     try {
-      const response = await fetch('https://skillarly-backend.onrender.com/update-preferences', {
+      await handleApiCall('https://skillarly-backend.onrender.com/update-preferences', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -161,14 +218,10 @@ const Dashboard = () => {
         }),
       });
       
-      if (response.ok) {
-        alert('Preferences saved!');
-      } else {
-        alert('Error saving preferences');
-      }
+      alert('Preferences saved!');
     } catch (error) {
       console.error('Error saving preferences:', error);
-      alert('Error saving preferences');
+      alert('Error saving preferences: ' + error.message);
     }
   };
 
@@ -184,7 +237,7 @@ const Dashboard = () => {
     }
 
     try {
-      const res = await fetch('https://skillarly-backend.onrender.com/subscribe', {
+      const result = await handleApiCall('https://skillarly-backend.onrender.com/subscribe', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -198,20 +251,24 @@ const Dashboard = () => {
         }),
       });
       
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message);
       if (payment === 'stripe' && result.stripeUrl) {
         window.location.href = result.stripeUrl;
       }
     } catch (error) {
       console.error('Subscription error:', error);
-      alert('Error processing subscription');
+      alert('Error processing subscription: ' + error.message);
     }
   };
 
   const handleLogout = () => {
     logout(); // Use your logout utility
     navigate('/login');
+  };
+
+  // Handle image load error
+  const handleImageError = (e) => {
+    console.log('Image failed to load, falling back to default');
+    e.target.src = getDefaultAvatar();
   };
 
   if (loading) {
@@ -250,15 +307,37 @@ const Dashboard = () => {
         <h1>Skillarly Dashboard</h1>
       </header>
 
+      {/* Display API errors if any */}
+      {Object.keys(apiErrors).length > 0 && (
+        <div className="api-errors" style={{ 
+          background: '#fee', 
+          border: '1px solid #fcc', 
+          padding: '10px', 
+          margin: '10px 0', 
+          borderRadius: '5px' 
+        }}>
+          <h4>Some features may be limited due to API issues:</h4>
+          <ul>
+            {Object.entries(apiErrors).map(([url, error]) => (
+              <li key={url} style={{ fontSize: '0.9em', color: '#c00' }}>
+                {url.split('/').pop()}: {error}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <section className="profile-section">
         <h2>Profile Summary</h2>
         <div className="profile-card">
           <div className="profile-content">
             <div className="profile-image-container">
               <img 
-                src={userData?.profilePicture || '/img/default-avatar.png'} 
+                src={getProfilePictureUrl()} 
                 alt="Profile" 
                 className="profile-image"
+                onError={handleImageError}
+                crossOrigin="anonymous"
               />
             </div>
             <div className="profile-details">
