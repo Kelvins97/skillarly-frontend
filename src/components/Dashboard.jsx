@@ -121,7 +121,7 @@ const Dashboard = () => {
 
         // Fetch additional user data (skills, certifications, etc.) - this route accepts JWT auth
         try {
-          const additionalData = await apiCall('/api/user-data');
+          const additionalData = await apiCall('/user-data');
           if (additionalData && additionalData.success) {
             // Merge the additional data with existing user data
             setUserData(prev => ({ 
