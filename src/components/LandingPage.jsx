@@ -161,7 +161,7 @@ const LandingPage = () => {
         }
         
         .linkedin-button {
-          background-color: #0077b5;
+          background-color: #1DA1F2;
           color: white;
           border: none;
           padding: 12px 24px;
@@ -178,7 +178,7 @@ const LandingPage = () => {
         }
         
         .linkedin-button:hover {
-          background-color: #005885;
+          background-color: #0A85D1;
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
