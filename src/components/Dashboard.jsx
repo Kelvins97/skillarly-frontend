@@ -14,6 +14,8 @@ const Dashboard = () => {
   const [upgradeBanner, setUpgradeBanner] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeStatus, setScrapeStatus] = useState(null);
   const themeToggleRef = useRef();
   const navigate = useNavigate();
 
