@@ -75,7 +75,7 @@ const Dashboard = () => {
     try {
       const result = await apiCall('/scrape-profile', {
         method: 'POST',
-        body: JSON.stringify({ profileUrl: userData?.linkedinUrl || 'https://linkedin.com/in/example' })
+        body: JSON.stringify({ profileUrl: userData?.profile_url })
       });
       if (result.success) {
         setScrapeStatus('Scrape successful!');
