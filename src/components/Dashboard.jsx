@@ -14,8 +14,6 @@ const Dashboard = () => {
   const [upgradeBanner, setUpgradeBanner] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
-  const [isScraping, setIsScraping] = useState(false);
-  const [scrapeStatus, setScrapeStatus] = useState(null);
   const themeToggleRef = useRef();
   const navigate = useNavigate();
 
@@ -69,27 +67,6 @@ const Dashboard = () => {
     }
   };
 
-  const scrapeLinkedIn = async () => {
-    setIsScraping(true);
-    setScrapeStatus(null);
-    try {
-      const result = await apiCall('/scrape-profile', {
-        method: 'POST',
-        body: JSON.stringify({ profileUrl: userData?.profile_url })
-      });
-      if (result.success) {
-        setScrapeStatus('Scrape successful!');
-        setUserData(prev => ({ ...prev, ...result.data }));
-      } else {
-        setScrapeStatus('Scrape failed. Try again.');
-      }
-    } catch (error) {
-      setScrapeStatus('Scrape failed. Try again.');
-    } finally {
-      setIsScraping(false);
-    }
-  };
-   
   useEffect(() => {
     // Get user and token from localStorage using your auth utilities
     const user = getUser();
@@ -353,10 +330,6 @@ const Dashboard = () => {
               </div>
               <p className="user-headline">{userData?.headline || 'Professional'}</p>
               <p className="user-email">Email: {userData?.email}</p>
-               <button onClick={scrapeLinkedIn} disabled={isScraping} style={{ marginTop: '10px' }}>
-                {isScraping ? 'Scraping LinkedIn...' : 'Scrape LinkedIn Profile'}
-              </button>
-              {scrapeStatus && <p style={{ color: scrapeStatus.includes('success') ? 'green' : 'red' }}>{scrapeStatus}</p>}
             </div>
           </div>
         </div>
