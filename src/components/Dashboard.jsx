@@ -67,6 +67,27 @@ const Dashboard = () => {
     }
   };
 
+  const scrapeLinkedIn = async () => {
+    setIsScraping(true);
+    setScrapeStatus(null);
+    try {
+      const result = await apiCall('/scrape-profile', {
+        method: 'POST',
+        body: JSON.stringify({ profileUrl: userData?.linkedinUrl || 'https://linkedin.com/in/example' })
+      });
+      if (result.success) {
+        setScrapeStatus('Scrape successful!');
+        setUserData(prev => ({ ...prev, ...result.data }));
+      } else {
+        setScrapeStatus('Scrape failed. Try again.');
+      }
+    } catch (error) {
+      setScrapeStatus('Scrape failed. Try again.');
+    } finally {
+      setIsScraping(false);
+    }
+  };
+   
   useEffect(() => {
     // Get user and token from localStorage using your auth utilities
     const user = getUser();
@@ -121,7 +142,7 @@ const Dashboard = () => {
 
         // Fetch additional user data (skills, certifications, etc.) - this route accepts JWT auth
         try {
-          const additionalData = await apiCall('/user-data');
+          const additionalData = await apiCall('/api/user-data');
           if (additionalData && additionalData.success) {
             // Merge the additional data with existing user data
             setUserData(prev => ({ 
@@ -330,6 +351,10 @@ const Dashboard = () => {
               </div>
               <p className="user-headline">{userData?.headline || 'Professional'}</p>
               <p className="user-email">Email: {userData?.email}</p>
+               <button onClick={scrapeLinkedIn} disabled={isScraping} style={{ marginTop: '10px' }}>
+                {isScraping ? 'Scraping LinkedIn...' : 'Scrape LinkedIn Profile'}
+              </button>
+              {scrapeStatus && <p style={{ color: scrapeStatus.includes('success') ? 'green' : 'red' }}>{scrapeStatus}</p>}
             </div>
           </div>
         </div>
