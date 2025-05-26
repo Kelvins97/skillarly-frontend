@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getUser, getAuthToken, logout } from '../utils/auth'; // Import your auth utilities
+import { getUser, getAuthToken, logout } from '../utils/auth';
 import { useNavigate } from 'react-router-dom';
 import './style.css';
 
@@ -11,16 +11,16 @@ const Dashboard = () => {
   const [preferences, setPreferences] = useState({ email_notifications: false });
   const [plan, setPlan] = useState('Loading...');
   const [scrapeCount, setScrapeCount] = useState(0);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeUploadStatus, setResumeUploadStatus] = useState(null);
   const [upgradeBanner, setUpgradeBanner] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const themeToggleRef = useRef();
   const navigate = useNavigate();
 
-  // Base URL for your backend
   const BACKEND_URL = 'https://skillarly-backend.onrender.com';
 
-  // Function to get time-based greeting
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
@@ -28,7 +28,6 @@ const Dashboard = () => {
     return 'Good Evening';
   };
 
-  // Helper function to make authenticated API calls
   const apiCall = async (endpoint, options = {}) => {
     const token = getAuthToken();
     const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}${endpoint}`;
@@ -44,22 +43,13 @@ const Dashboard = () => {
 
     try {
       const response = await fetch(url, config);
-      
-      // Check if token is invalid
       if (response.status === 401) {
-        console.log('Token expired or invalid, logging out');
         logout();
         navigate('/login');
         return null;
       }
-
-      // Parse response
       const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || `Request failed with status ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error(data.message || `Request failed with status ${response.status}`);
       return data;
     } catch (error) {
       console.error(`API call to ${endpoint} failed:`, error);
@@ -67,12 +57,37 @@ const Dashboard = () => {
     }
   };
 
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setResumeUploadStatus('Uploading...');
+
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/upload-resume`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` },
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.success) {
+        setResumeFile(file);
+        setResumeUploadStatus('Resume uploaded and parsed successfully!');
+        setUserData(prev => ({ ...prev, ...data.parsed }));
+      } else {
+        setResumeUploadStatus('Resume upload failed.');
+      }
+    } catch (err) {
+      console.error('Resume upload failed:', err);
+      setResumeUploadStatus('Error uploading resume.');
+    }
+  };
+
   useEffect(() => {
-    // Get user and token from localStorage using your auth utilities
     const user = getUser();
     const token = getAuthToken();
-
-    console.log('Dashboard auth check:', { user, token: token ? 'exists' : 'missing' });
 
     if (!token || !user) {
       console.log('No token or user found, redirecting to login');
@@ -81,64 +96,35 @@ const Dashboard = () => {
       return;
     }
 
-    // Use the user data from localStorage and fetch additional data
     const fetchUserData = async () => {
       try {
-        // Set initial user data from auth
-        setUserData({
-          name: user.name,
-          email: user.email,
-          id: user.id
-        });
-        
+        setUserData({ name: user.name, email: user.email, id: user.id });
         setAuthenticated(true);
 
-        // Fetch user info (plan, scrapes, etc.) - this route accepts JWT auth
-        try {
-          const userInfo = await apiCall('/user-info');
-          if (userInfo && userInfo.success) {
-            setPlan(userInfo.plan || 'Basic');
-            setScrapeCount(userInfo.monthly_scrapes || 0);
-            setPreferences({ email_notifications: userInfo.email_notifications !== false });
-            
-            // Check if upgrade banner should be shown
-            if (userInfo.plan === 'basic' && userInfo.monthly_scrapes >= 2) {
-              setUpgradeBanner(true);
-            }
-
-            // Update user data with additional info
-            setUserData(prev => ({
-              ...prev,
-              plan: userInfo.plan,
-              monthly_scrapes: userInfo.monthly_scrapes,
-              email_notifications: userInfo.email_notifications
-            }));
+        const userInfo = await apiCall('/user-info');
+        if (userInfo?.success) {
+          setPlan(userInfo.plan || 'Basic');
+          setScrapeCount(userInfo.monthly_scrapes || 0);
+          setPreferences({ email_notifications: userInfo.email_notifications !== false });
+          
+          if (userInfo.plan === 'basic' && userInfo.monthly_scrapes >= 2) {
+            setUpgradeBanner(true);
           }
-        } catch (error) {
-          console.error('Error fetching user info:', error);
-          setErrors(prev => ({ ...prev, userInfo: 'Failed to load user information' }));
+
+          setUserData(prev => ({
+            ...prev,
+            plan: userInfo.plan,
+            monthly_scrapes: userInfo.monthly_scrapes,
+            email_notifications: userInfo.email_notifications
+          }));
         }
 
-        // Fetch additional user data (skills, certifications, etc.) - this route accepts JWT auth
-        try {
-          const additionalData = await apiCall('/user-data');
-          if (additionalData && additionalData.success) {
-            // Merge the additional data with existing user data
-            setUserData(prev => ({ 
-              ...prev, 
-              ...additionalData,
-              // Keep the original email and id from localStorage
-              email: prev.email,
-              id: prev.id
-            }));
-          }
-        } catch (error) {
-          console.error('Error fetching additional user data:', error);
-          setErrors(prev => ({ ...prev, userData: 'Failed to load profile data' }));
+        const additionalData = await apiCall('/user-data');
+        if (additionalData?.success) {
+          setUserData(prev => ({ ...prev, ...additionalData }));
         }
-
       } catch (error) {
-        console.error('Error in fetchUserData:', error);
+        console.error('Error fetching user data:', error);
         setAuthenticated(false);
       } finally {
         setLoading(false);
@@ -148,18 +134,15 @@ const Dashboard = () => {
     fetchUserData();
   }, [navigate]);
 
-  // Separate function to fetch recommendations
   const fetchRecommendations = async () => {
     setIsLoadingRecommendations(true);
     try {
       const recData = await apiCall('/recommendations', {
         method: 'POST',
-        body: JSON.stringify({ 
-          skills: userData?.skills || []
-        }),
+        body: JSON.stringify({ skills: userData?.skills || [] }),
       });
       
-      if (recData && recData.success) {
+      if (recData?.success) {
         setRecommendations({
           courses: recData.courses || [],
           certifications: recData.certifications || [],
@@ -194,11 +177,7 @@ const Dashboard = () => {
       toggle.textContent = '☀️';
     }
 
-    return () => {
-      if (toggle) {
-        toggle.removeEventListener('click', handleClick);
-      }
-    };
+    return () => toggle.removeEventListener('click', handleClick);
   }, [loading]);
 
   const saveNotificationSettings = async () => {
@@ -207,11 +186,11 @@ const Dashboard = () => {
         method: 'POST',
         body: JSON.stringify({ 
           email_notifications: preferences.email_notifications,
-          frequency: 'weekly' // You can make this configurable
+          frequency: 'weekly'
         }),
       });
       
-      if (result && result.success) {
+      if (result?.success) {
         alert('Preferences saved successfully!');
         setErrors(prev => ({ ...prev, preferences: null }));
       }
@@ -245,7 +224,6 @@ const Dashboard = () => {
           window.location.href = result.stripeUrl;
         } else if (result.success) {
           alert('Subscription updated successfully!');
-          // Refresh user data to get updated plan
           window.location.reload();
         }
       }
@@ -256,7 +234,7 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
-    logout(); // Use your logout utility
+    logout();
     navigate('/login');
   };
 
@@ -275,10 +253,7 @@ const Dashboard = () => {
         <div className="auth-card">
           <h2>Authentication Required</h2>
           <p>You need to be authenticated to view this dashboard.</p>
-          <button 
-            className="linkedin-button" 
-            onClick={() => navigate('/login')}
-          >
+          <button className="linkedin-button" onClick={() => navigate('/login')}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#ffffff" style={{ marginRight: '8px' }}>
               <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
             </svg>
@@ -296,7 +271,6 @@ const Dashboard = () => {
         <h1>Skillarly Dashboard</h1>
       </header>
 
-      {/* Error Display */}
       {Object.keys(errors).length > 0 && (
         <div className="error-banner">
           {Object.entries(errors).map(([key, message]) => 
@@ -313,20 +287,36 @@ const Dashboard = () => {
         <h2>Profile Summary</h2>
         <div className="profile-card">
           <div className="profile-content">
-            <div className="profile-image-container">
-              <img 
-                src={userData?.profilePicture || '/img/default-avatar.png'} 
-                alt="Profile" 
-                className="profile-image"
-                onError={(e) => {
-                  e.target.src = '/img/default-avatar.png';
-                }}
-              />
+            <div className="resume-upload-container">
+              {resumeFile ? (
+                <a 
+                  href={URL.createObjectURL(resumeFile)} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="view-resume"
+                >
+                  View Uploaded Resume
+                </a>
+              ) : (
+                <p className="no-resume">No resume uploaded</p>
+              )}
+              <div className="upload-controls">
+                <input 
+                  type="file" 
+                  id="resumeUpload" 
+                  onChange={handleResumeUpload}
+                  accept=".pdf,.doc,.docx"
+                />
+                <label htmlFor="resumeUpload" className="upload-button">
+                  {resumeFile ? 'Replace Resume' : 'Upload Resume'}
+                </label>
+                {resumeUploadStatus && <p className="upload-status">{resumeUploadStatus}</p>}
+              </div>
             </div>
             <div className="profile-details">
               <div className="greeting-container">
                 <span className="greeting">{getTimeBasedGreeting()},</span>
-                <h3 className="user-name">{userData?.name || 'LinkedIn User'}</h3>
+                <h3 className="user-name">{userData?.name || 'User'}</h3>
               </div>
               <p className="user-headline">{userData?.headline || 'Professional'}</p>
               <p className="user-email">Email: {userData?.email}</p>
@@ -341,7 +331,7 @@ const Dashboard = () => {
           <ul className="skills-list">
             {userData.skills.map((s, i) => <li key={i}>{s}</li>)}
           </ul>
-        ) : <p>No skills data available. Try scraping your LinkedIn profile to get personalized recommendations.</p>}
+        ) : <p>No skills data available. Upload your resume to get started.</p>}
       </section>
 
       <section>
@@ -371,17 +361,12 @@ const Dashboard = () => {
               <li key={i}>
                 <strong>{item.title || item}</strong><br />
                 {item.description && <span>{item.description}</span>}
-                {item.link && (
-                  <>
-                    <br />
-                    <a href={item.link} target="_blank" rel="noreferrer">View Course</a>
-                  </>
-                )}
+                {item.link && <a href={item.link} target="_blank" rel="noreferrer">View Course</a>}
               </li>
-            )) : <li>No course recommendations available. Generate recommendations to see suggestions.</li>
+            )) : <li>No course recommendations available</li>
           }
         </ul>
-        
+
         <h3>🎖️ Certifications</h3>
         <ul>
           {recommendations.certifications.length > 0 ? 
@@ -389,17 +374,12 @@ const Dashboard = () => {
               <li key={i}>
                 <strong>{item.title || item}</strong><br />
                 {item.description && <span>{item.description}</span>}
-                {item.link && (
-                  <>
-                    <br />
-                    <a href={item.link} target="_blank" rel="noreferrer">View Certification</a>
-                  </>
-                )}
+                {item.link && <a href={item.link} target="_blank" rel="noreferrer">View Certification</a>}
               </li>
-            )) : <li>No certification recommendations available. Generate recommendations to see suggestions.</li>
+            )) : <li>No certification recommendations available</li>
           }
         </ul>
-        
+
         <h3>💼 Jobs</h3>
         <ul>
           {recommendations.jobs.length > 0 ? 
@@ -409,18 +389,14 @@ const Dashboard = () => {
                 <span>{item.description}</span><br />
                 <a href={item.link} target="_blank" rel="noreferrer">View Job</a>
               </li>
-            )) : <li>No job recommendations available. Generate recommendations to see suggestions.</li>
+            )) : <li>No job recommendations available</li>
           }
         </ul>
       </section>
 
       <section>
         <h2>Notification Preferences</h2>
-        {errors.preferences && (
-          <div className="error-message">
-            {errors.preferences}
-          </div>
-        )}
+        {errors.preferences && <div className="error-message">{errors.preferences}</div>}
         <label>
           <input 
             type="checkbox" 
@@ -437,7 +413,7 @@ const Dashboard = () => {
         <p><strong>Plan:</strong> {plan}</p>
         {upgradeBanner && (
           <div className="banner">
-            You've used all your profile scrapes for this month. Upgrade your plan to continue.
+            You've used all your profile scrapes this month. Upgrade to continue.
           </div>
         )}
         <p><strong>Scrapes Used:</strong> {scrapeCount}</p>
@@ -462,27 +438,21 @@ const Dashboard = () => {
               </p>
               <div className="plan-features">
                 <ul>
-                  {planType === 'basic' && (
-                    <>
-                      <li>Basic recommendations</li>
-                      <li>Basic analytics</li>
-                    </>
-                  )}
-                  {planType === 'pro' && (
-                    <>
-                      <li>Advanced recommendations</li>
-                      <li>Weekly insights</li>
-                      <li>Priority support</li>
-                    </>
-                  )}
-                  {planType === 'premium' && (
-                    <>
-                      <li>Custom recommendations</li>
-                      <li>Daily insights</li>
-                      <li>24/7 Premium support</li>
-                      <li>Personalized career coaching</li>
-                    </>
-                  )}
+                  {planType === 'basic' && <>
+                    <li>Basic recommendations</li>
+                    <li>Basic analytics</li>
+                  </>}
+                  {planType === 'pro' && <>
+                    <li>Advanced recommendations</li>
+                    <li>Weekly insights</li>
+                    <li>Priority support</li>
+                  </>}
+                  {planType === 'premium' && <>
+                    <li>Custom recommendations</li>
+                    <li>Daily insights</li>
+                    <li>24/7 Premium support</li>
+                    <li>Personalized coaching</li>
+                  </>}
                 </ul>
               </div>
             </label>
