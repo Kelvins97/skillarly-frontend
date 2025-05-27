@@ -585,7 +585,7 @@ const Dashboard = () => {
             You've used all your recommendations for this week. Upgrade your plan to continue.
           </div>
         )}
-        <p><strong>Scrapes Used:</strong> {recommendationsCount}</p>
+        <p><strong>Recommendations:</strong> {recommendationsCount}</p>
         {upgradeBanner && (
           <button onClick={() => document.getElementById('subscriptions-tab')?.scrollIntoView({ behavior: 'smooth' })}>
             Upgrade Plan
