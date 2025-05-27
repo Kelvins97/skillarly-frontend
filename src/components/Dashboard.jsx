@@ -14,7 +14,10 @@ const Dashboard = () => {
   const [upgradeBanner, setUpgradeBanner] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
   const themeToggleRef = useRef();
+  const fileInputRef = useRef();
   const navigate = useNavigate();
 
   // Base URL for your backend
@@ -67,6 +70,99 @@ const Dashboard = () => {
     }
   };
 
+  // Function to handle resume file selection
+  const handleResumeUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Check file type
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please upload a PDF or Word document (.pdf, .doc, .docx)');
+      return;
+    }
+
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    uploadResume(file);
+  };
+
+  // Function to upload resume to backend
+  const uploadResume = async (file) => {
+    setIsUploadingResume(true);
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${BACKEND_URL}/upload-resume`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (response.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || 'Upload failed');
+      }
+
+      if (result.success) {
+        setResumeFile({
+          filename: file.name,
+          url: result.resumeUrl,
+          uploadDate: new Date().toISOString()
+        });
+        
+        // Update user data with resume info
+        setUserData(prev => ({
+          ...prev,
+          resumeUrl: result.resumeUrl,
+          resumeFilename: file.name
+        }));
+        
+        alert('Resume uploaded successfully!');
+        setErrors(prev => ({ ...prev, resume: null }));
+      }
+    } catch (error) {
+      console.error('Resume upload error:', error);
+      setErrors(prev => ({ ...prev, resume: 'Failed to upload resume' }));
+      alert(`Error uploading resume: ${error.message}`);
+    } finally {
+      setIsUploadingResume(false);
+    }
+  };
+
+  // Function to view resume
+  const viewResume = () => {
+    if (userData?.resumeUrl || resumeFile?.url) {
+      const resumeUrl = userData?.resumeUrl || resumeFile?.url;
+      window.open(resumeUrl, '_blank');
+    }
+  };
+
+  // Function to trigger file input
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
   useEffect(() => {
     // Get user and token from localStorage using your auth utilities
     const user = getUser();
@@ -111,8 +207,19 @@ const Dashboard = () => {
               ...prev,
               plan: userInfo.plan,
               monthly_scrapes: userInfo.monthly_scrapes,
-              email_notifications: userInfo.email_notifications
+              email_notifications: userInfo.email_notifications,
+              resumeUrl: userInfo.resumeUrl,
+              resumeFilename: userInfo.resumeFilename
             }));
+
+            // Set resume file if exists
+            if (userInfo.resumeUrl) {
+              setResumeFile({
+                filename: userInfo.resumeFilename || 'Resume',
+                url: userInfo.resumeUrl,
+                uploadDate: userInfo.resumeUploadDate
+              });
+            }
           }
         } catch (error) {
           console.error('Error fetching user info:', error);
@@ -313,15 +420,34 @@ const Dashboard = () => {
         <h2>Profile Summary</h2>
         <div className="profile-card">
           <div className="profile-content">
-            <div className="profile-image-container">
-              <img 
-                src={userData?.profilePicture || '/img/default-avatar.png'} 
-                alt="Profile" 
-                className="profile-image"
-                onError={(e) => {
-                  e.target.src = '/img/default-avatar.png';
-                }}
-              />
+            <div className="resume-container">
+              {resumeFile || userData?.resumeUrl ? (
+                <div 
+                  className="resume-preview" 
+                  onClick={viewResume}
+                  style={{ cursor: 'pointer' }}
+                  title="Click to view resume"
+                >
+                  <div className="resume-icon">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                  </div>
+                  <p className="resume-filename">
+                    {resumeFile?.filename || userData?.resumeFilename || 'Resume'}
+                  </p>
+                  <span className="view-resume-text">Click to view</span>
+                </div>
+              ) : (
+                <div className="no-resume">
+                  <div className="resume-placeholder">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor" opacity="0.5">
+                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                  </div>
+                  <p>No resume uploaded</p>
+                </div>
+              )}
             </div>
             <div className="profile-details">
               <div className="greeting-container">
@@ -330,6 +456,25 @@ const Dashboard = () => {
               </div>
               <p className="user-headline">{userData?.headline || 'Professional'}</p>
               <p className="user-email">Email: {userData?.email}</p>
+              
+              {/* Resume Upload Button */}
+              <div className="resume-upload-section">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleResumeUpload}
+                  accept=".pdf,.doc,.docx"
+                  style={{ display: 'none' }}
+                />
+                <button 
+                  onClick={triggerFileUpload}
+                  disabled={isUploadingResume}
+                  className="upload-resume-btn"
+                >
+                  {isUploadingResume ? 'Uploading...' : (resumeFile || userData?.resumeUrl ? '📄 Update Resume' : '📄 Upload Resume')}
+                </button>
+                <p className="upload-hint">PDF, DOC, or DOCX (Max 5MB)</p>
+              </div>
             </div>
           </div>
         </div>
