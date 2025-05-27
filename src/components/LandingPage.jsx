@@ -63,13 +63,13 @@ const LandingPage = () => {
           <div id="loading">Processing your profile...</div>
         ) : profile && token ? (
           <div id="content">
-            <p>You're signed in! Ready to analyze your LinkedIn profile?</p>
+            <p>You're signed in! Ready to analyze your Resume?</p>
             <p id="profile-name">Profile: {profile}</p>
             <button onClick={handleAnalyze}>Analyze My Profile</button>
           </div>
         ) : (
           <div id="not-authenticated">
-            <p>To analyze your LinkedIn profile, you need to authenticate with LinkedIn first.</p>
+            <p>To analyze your Resume, you need to authenticate with LinkedIn first.</p>
             <button className="linkedin-button" onClick={handleLogin}>
               <svg 
                 width="20" 
