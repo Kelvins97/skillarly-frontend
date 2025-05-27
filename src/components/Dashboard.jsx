@@ -486,7 +486,7 @@ const Dashboard = () => {
           <ul className="skills-list">
             {userData.skills.map((s, i) => <li key={i}>{s}</li>)}
           </ul>
-        ) : <p>No skills data available. Try scraping your LinkedIn profile to get personalized recommendations.</p>}
+        ) : <p>No skills data available. Upload your resume to get personalized recommendations.</p>}
       </section>
 
       <section>
@@ -523,7 +523,7 @@ const Dashboard = () => {
                   </>
                 )}
               </li>
-            )) : <li>No course recommendations available. Generate recommendations to see suggestions.</li>
+            )) : <li>No course recommendations available. Upload resume to see suggestions.</li>
           }
         </ul>
         
@@ -541,7 +541,7 @@ const Dashboard = () => {
                   </>
                 )}
               </li>
-            )) : <li>No certification recommendations available. Generate recommendations to see suggestions.</li>
+            )) : <li>No certification recommendations available. Upload resume to see suggestions.</li>
           }
         </ul>
         
@@ -554,7 +554,7 @@ const Dashboard = () => {
                 <span>{item.description}</span><br />
                 <a href={item.link} target="_blank" rel="noreferrer">View Job</a>
               </li>
-            )) : <li>No job recommendations available. Generate recommendations to see suggestions.</li>
+            )) : <li>No job recommendations available. Upload resume to see suggestions.</li>
           }
         </ul>
       </section>
@@ -582,7 +582,7 @@ const Dashboard = () => {
         <p><strong>Plan:</strong> {plan}</p>
         {upgradeBanner && (
           <div className="banner">
-            You've used all your profile scrapes for this month. Upgrade your plan to continue.
+            You've used all your recommendations for this week. Upgrade your plan to continue.
           </div>
         )}
         <p><strong>Scrapes Used:</strong> {scrapeCount}</p>
