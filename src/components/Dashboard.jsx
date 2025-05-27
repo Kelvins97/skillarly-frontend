@@ -10,7 +10,7 @@ const Dashboard = () => {
   const [recommendations, setRecommendations] = useState({ courses: [], certifications: [], jobs: [] });
   const [preferences, setPreferences] = useState({ email_notifications: false });
   const [plan, setPlan] = useState('Loading...');
-  const [scrapeCount, setScrapeCount] = useState(0);
+  const [recommendationsCount, setRecommendationsCount] = useState(0);
   const [upgradeBanner, setUpgradeBanner] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
@@ -194,7 +194,7 @@ const Dashboard = () => {
           const userInfo = await apiCall('/user-info');
           if (userInfo && userInfo.success) {
             setPlan(userInfo.plan || 'Basic');
-            setScrapeCount(userInfo.monthly_scrapes || 0);
+            setRecommendationsCount(userInfo.weekly_recommendations || 0);
             setPreferences({ email_notifications: userInfo.email_notifications !== false });
             
             // Check if upgrade banner should be shown
@@ -585,7 +585,7 @@ const Dashboard = () => {
             You've used all your recommendations for this week. Upgrade your plan to continue.
           </div>
         )}
-        <p><strong>Scrapes Used:</strong> {scrapeCount}</p>
+        <p><strong>Scrapes Used:</strong> {recommendationsCount}</p>
         {upgradeBanner && (
           <button onClick={() => document.getElementById('subscriptions-tab')?.scrollIntoView({ behavior: 'smooth' })}>
             Upgrade Plan
@@ -601,8 +601,8 @@ const Dashboard = () => {
               <input type="radio" name="plan" value={planType} defaultChecked={planType === 'basic'} />
               <h3>{planType.charAt(0).toUpperCase() + planType.slice(1)}</h3>
               <p>
-                {planType === 'basic' ? 'Free – 2 scrapes/month' : 
-                 planType === 'pro' ? '$5/month – 10 scrapes' : 
+                {planType === 'basic' ? 'Free – 2 recommendations/week' : 
+                 planType === 'pro' ? '$5/month – 10 recommendations' : 
                  '$15/month – Unlimited'}
               </p>
               <div className="plan-features">
