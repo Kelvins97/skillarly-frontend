@@ -30,7 +30,7 @@ const Dashboard = () => {
   useEffect(() => {
     const lastDripShown = localStorage.getItem('lastDripShown');
     const today = new Date().toISOString().split('T')[0];
-    if (lastDripShown !== today && recommendations.courses.length > 0 || recommendations.certifications.length > 0 || recommendations.jobs.length > 0) {
+    if if (lastDripShown !== today && (recommendations.courses.length > 0 || recommendations.certifications.length > 0 || recommendations.jobs.length > 0)) {
       setShowDrip(true);
       localStorage.setItem('lastDripShown', today);
     }
