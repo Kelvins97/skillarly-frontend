@@ -930,3 +930,191 @@ body.dark .auth-card {
   }
 }
 
+/* style.css */
+/* Drip Modal Styles */
+@keyframes fall {
+  to {
+    transform: translate(var(--vx), calc(var(--vy) + 300px));
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    transform: translateY(30px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+.drip-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.drip-modal {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 0;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease-out;
+  overflow: hidden;
+  position: relative;
+  color: white;
+}
+
+.drip-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  pointer-events: none;
+}
+
+.drip-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.daily-badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.drip-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 5px 15px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.drip-close-btn:hover {
+  opacity: 1;
+}
+
+.drip-content {
+  padding: 25px 30px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.drip-icon {
+  font-size: 60px;
+  margin-bottom: 15px;
+}
+
+.drip-content h2 {
+  margin: 0 0 15px;
+  font-size: 22px;
+}
+
+.drip-content h3 {
+  margin: 15px 0 10px;
+  font-size: 20px;
+}
+
+.drip-content p {
+  line-height: 1.6;
+  opacity: 0.9;
+  margin-bottom: 20px;
+}
+
+.rec-type-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.rec-link {
+  display: inline-block;
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 8px 20px;
+  border-radius: 25px;
+  transition: all 0.3s;
+}
+
+.rec-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.drip-buttons {
+  display: flex;
+  gap: 15px;
+  padding: 0 30px 25px;
+  position: relative;
+  z-index: 1;
+}
+
+.give-more-btn, .later-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 16px;
+  border: none;
+}
+
+.give-more-btn {
+  background: white;
+  color: #764ba2;
+}
+
+.give-more-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
+}
+
+.later-btn {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.later-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
