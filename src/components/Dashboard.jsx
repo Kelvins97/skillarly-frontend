@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getUser, getAuthToken, logout } from '../utils/auth'; // Import your auth utilities
+import { getUser, getAuthToken, logout } from '../utils/auth';
 import { useNavigate } from 'react-router-dom';
 import './style.css';
 
@@ -16,12 +16,142 @@ const Dashboard = () => {
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [resumeFile, setResumeFile] = useState(null);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [showDrip, setShowDrip] = useState(false);
   const themeToggleRef = useRef();
   const fileInputRef = useRef();
   const navigate = useNavigate();
 
   // Base URL for your backend
   const BACKEND_URL = 'https://skillarly-backend.onrender.com';
+
+  // Check if drip should be shown
+  useEffect(() => {
+    const lastDripShown = localStorage.getItem('lastDripShown');
+    const today = new Date().toISOString().split('T')[0];
+    if (lastDripShown !== today && recommendations.courses.length > 0 || recommendations.certifications.length > 0 || recommendations.jobs.length > 0) {
+      setShowDrip(true);
+      localStorage.setItem('lastDripShown', today);
+    }
+  }, [recommendations]);
+
+  // Get drip recommendation
+  const getDripRecommendation = () => {
+    return (
+      recommendations.courses[0] ||
+      recommendations.certifications[0] ||
+      recommendations.jobs[0] ||
+      null
+    );
+  };
+
+  // Handle drip modal close
+  const handleCloseDrip = () => {
+    setShowDrip(false);
+  };
+
+  // Handle "Give Me More" with confetti effect
+  const handleGiveMeMore = () => {
+    // Create confetti effect
+    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'];
+    
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        const particleCount = 50;
+        const spread = 70;
+        const origin = { x: Math.random() * 0.6 + 0.2, y: Math.random() * 0.4 + 0.3 };
+        
+        // Create confetti burst
+        const confetti = document.createElement('div');
+        confetti.style.position = 'fixed';
+        confetti.style.top = `${origin.y * 100}%`;
+        confetti.style.left = `${origin.x * 100}%`;
+        confetti.style.pointerEvents = 'none';
+        confetti.style.zIndex = '10000';
+        document.body.appendChild(confetti);
+
+        for (let j = 0; j < particleCount; j++) {
+          const particle = document.createElement('div');
+          particle.style.position = 'absolute';
+          particle.style.width = '8px';
+          particle.style.height = '8px';
+          particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          particle.style.borderRadius = '50%';
+          particle.style.animation = `fall ${1 + Math.random()}s linear forwards`;
+          
+          const angle = (Math.random() - 0.5) * spread * Math.PI / 180;
+          const velocity = 100 + Math.random() * 100;
+          const vx = Math.cos(angle) * velocity;
+          const vy = Math.sin(angle) * velocity - 50;
+          
+          particle.style.setProperty('--vx', `${vx}px`);
+          particle.style.setProperty('--vy', `${vy}px`);
+          
+          confetti.appendChild(particle);
+        }
+
+        setTimeout(() => {
+          document.body.removeChild(confetti);
+        }, 2000);
+      }, i * 200);
+    }
+
+    setShowAll(true);
+    setShowDrip(false);
+  };
+
+  // Drip Modal Component
+  const DripModal = () => {
+    const rec = getDripRecommendation();
+    if (!rec || !showDrip) return null;
+
+    const getRecommendationType = () => {
+      if (recommendations.courses.includes(rec)) return { type: '🎓 Course', color: '#4ecdc4' };
+      if (recommendations.certifications.includes(rec)) return { type: '🎖️ Certification', color: '#feca57' };
+      if (recommendations.jobs.includes(rec)) return { type: '💼 Job', color: '#ff6b6b' };
+      return { type: '✨ Recommendation', color: '#45b7d1' };
+    };
+
+    const { type, color } = getRecommendationType();
+
+    return (
+      <div className="drip-modal-overlay">
+        <div className="drip-modal">
+          <div className="drip-modal-header">
+            <div className="daily-badge" style={{ backgroundColor: color }}>
+              Daily Pick
+            </div>
+            <button className="drip-close-btn" onClick={handleCloseDrip}>×</button>
+          </div>
+          
+          <div className="drip-content">
+            <div className="drip-icon">🎯</div>
+            <h2>Your Recommendation for Today</h2>
+            <div className="rec-type-badge" style={{ color: color }}>
+              {type}
+            </div>
+            <h3>{rec.title || rec}</h3>
+            <p>{rec.description || 'Boost your career with this personalized recommendation!'}</p>
+            
+            {rec.link && (
+              <a href={rec.link} target="_blank" rel="noreferrer" className="rec-link">
+                View Details →
+              </a>
+            )}
+          </div>
+          
+          <div className="drip-buttons">
+            <button className="give-more-btn" onClick={handleGiveMeMore}>
+              🚀 Give Me More!
+            </button>
+            <button className="later-btn" onClick={handleCloseDrip}>
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Function to get time-based greeting
   const getTimeBasedGreeting = () => {
@@ -48,7 +178,6 @@ const Dashboard = () => {
     try {
       const response = await fetch(url, config);
       
-      // Check if token is invalid
       if (response.status === 401) {
         console.log('Token expired or invalid, logging out');
         logout();
@@ -56,7 +185,6 @@ const Dashboard = () => {
         return null;
       }
 
-      // Parse response
       const data = await response.json();
       
       if (!response.ok) {
@@ -75,7 +203,6 @@ const Dashboard = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Check file type
     const allowedTypes = [
       'application/pdf',
       'application/msword',
@@ -87,7 +214,6 @@ const Dashboard = () => {
       return;
     }
 
-    // Check file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       alert('File size must be less than 5MB');
       return;
@@ -131,7 +257,6 @@ const Dashboard = () => {
           uploadDate: new Date().toISOString()
         });
         
-        // Update user data with resume info
         setUserData(prev => ({
           ...prev,
           resumeUrl: result.resumeUrl,
@@ -164,23 +289,17 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    // Get user and token from localStorage using your auth utilities
     const user = getUser();
     const token = getAuthToken();
 
-    console.log('Dashboard auth check:', { user, token: token ? 'exists' : 'missing' });
-
     if (!token || !user) {
-      console.log('No token or user found, redirecting to login');
       setAuthenticated(false);
       setLoading(false);
       return;
     }
 
-    // Use the user data from localStorage and fetch additional data
     const fetchUserData = async () => {
       try {
-        // Set initial user data from auth
         setUserData({
           name: user.name,
           email: user.email,
@@ -189,7 +308,6 @@ const Dashboard = () => {
         
         setAuthenticated(true);
 
-        // Fetch user info (plan, scrapes, etc.) - this route accepts JWT auth
         try {
           const userInfo = await apiCall('/user-info');
           if (userInfo && userInfo.success) {
@@ -197,12 +315,10 @@ const Dashboard = () => {
             setRecommendationsCount(userInfo.weekly_recommendations || 0);
             setPreferences({ email_notifications: userInfo.email_notifications !== false });
             
-            // Check if upgrade banner should be shown
             if (userInfo.plan === 'basic' && userInfo.monthly_scrapes >= 2) {
               setUpgradeBanner(true);
             }
 
-            // Update user data with additional info
             setUserData(prev => ({
               ...prev,
               plan: userInfo.plan,
@@ -212,7 +328,6 @@ const Dashboard = () => {
               resumeFilename: userInfo.resumeFilename
             }));
 
-            // Set resume file if exists
             if (userInfo.resumeUrl) {
               setResumeFile({
                 filename: userInfo.resumeFilename || 'Resume',
@@ -226,15 +341,12 @@ const Dashboard = () => {
           setErrors(prev => ({ ...prev, userInfo: 'Failed to load user information' }));
         }
 
-        // Fetch additional user data (skills, certifications, etc.) - this route accepts JWT auth
         try {
           const additionalData = await apiCall('/user-data');
           if (additionalData && additionalData.success) {
-            // Merge the additional data with existing user data
             setUserData(prev => ({ 
               ...prev, 
               ...additionalData,
-              // Keep the original email and id from localStorage
               email: prev.email,
               id: prev.id
             }));
@@ -314,7 +426,7 @@ const Dashboard = () => {
         method: 'POST',
         body: JSON.stringify({ 
           email_notifications: preferences.email_notifications,
-          frequency: 'weekly' // You can make this configurable
+          frequency: 'weekly'
         }),
       });
       
@@ -352,7 +464,6 @@ const Dashboard = () => {
           window.location.href = result.stripeUrl;
         } else if (result.success) {
           alert('Subscription updated successfully!');
-          // Refresh user data to get updated plan
           window.location.reload();
         }
       }
@@ -363,7 +474,7 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
-    logout(); // Use your logout utility
+    logout();
     navigate('/login');
   };
 
@@ -398,6 +509,8 @@ const Dashboard = () => {
 
   return (
     <div className="container">
+      <DripModal />
+      
       <div id="themeToggle" ref={themeToggleRef}>🌙</div>
       <header className="dashboard-header">
         <h1>Skillarly Dashboard</h1>
@@ -457,7 +570,6 @@ const Dashboard = () => {
               <p className="user-headline">{userData?.headline || 'Professional'}</p>
               <p className="user-email">Email: {userData?.email}</p>
               
-              {/* Resume Upload Button */}
               <div className="resume-upload-section">
                 <input
                   type="file"
@@ -509,54 +621,65 @@ const Dashboard = () => {
           </div>
         )}
 
-        <h3>🎓 Courses</h3>
-        <ul>
-          {recommendations.courses.length > 0 ? 
-            recommendations.courses.map((item, i) => (
-              <li key={i}>
-                <strong>{item.title || item}</strong><br />
-                {item.description && <span>{item.description}</span>}
-                {item.link && (
-                  <>
-                    <br />
-                    <a href={item.link} target="_blank" rel="noreferrer">View Course</a>
-                  </>
-                )}
-              </li>
-            )) : <li>No course recommendations available. Upload resume to see suggestions.</li>
-          }
-        </ul>
-        
-        <h3>🎖️ Certifications</h3>
-        <ul>
-          {recommendations.certifications.length > 0 ? 
-            recommendations.certifications.map((item, i) => (
-              <li key={i}>
-                <strong>{item.title || item}</strong><br />
-                {item.description && <span>{item.description}</span>}
-                {item.link && (
-                  <>
-                    <br />
-                    <a href={item.link} target="_blank" rel="noreferrer">View Certification</a>
-                  </>
-                )}
-              </li>
-            )) : <li>No certification recommendations available. Upload resume to see suggestions.</li>
-          }
-        </ul>
-        
-        <h3>💼 Jobs</h3>
-        <ul>
-          {recommendations.jobs.length > 0 ? 
-            recommendations.jobs.map((item, i) => (
-              <li key={i}>
-                <strong>{item.title}</strong> at {item.company}<br />
-                <span>{item.description}</span><br />
-                <a href={item.link} target="_blank" rel="noreferrer">View Job</a>
-              </li>
-            )) : <li>No job recommendations available. Upload resume to see suggestions.</li>
-          }
-        </ul>
+        <div className={`recommendations-content ${showAll ? 'show-all' : ''}`}>
+          <h3>🎓 Courses</h3>
+          <ul>
+            {recommendations.courses.length > 0 ? 
+              recommendations.courses.slice(0, showAll ? undefined : 3).map((item, i) => (
+                <li key={i}>
+                  <strong>{item.title || item}</strong><br />
+                  {item.description && <span>{item.description}</span>}
+                  {item.link && (
+                    <>
+                      <br />
+                      <a href={item.link} target="_blank" rel="noreferrer">View Course</a>
+                    </>
+                  )}
+                </li>
+              )) : <li>No course recommendations available. Upload resume to see suggestions.</li>
+            }
+          </ul>
+          
+          <h3>🎖️ Certifications</h3>
+          <ul>
+            {recommendations.certifications.length > 0 ? 
+              recommendations.certifications.slice(0, showAll ? undefined : 3).map((item, i) => (
+                <li key={i}>
+                  <strong>{item.title || item}</strong><br />
+                  {item.description && <span>{item.description}</span>}
+                  {item.link && (
+                    <>
+                      <br />
+                      <a href={item.link} target="_blank" rel="noreferrer">View Certification</a>
+                    </>
+                  )}
+                </li>
+              )) : <li>No certification recommendations available. Upload resume to see suggestions.</li>
+            }
+          </ul>
+          
+          <h3>💼 Jobs</h3>
+          <ul>
+            {recommendations.jobs.length > 0 ? 
+              recommendations.jobs.slice(0, showAll ? undefined : 3).map((item, i) => (
+                <li key={i}>
+                  <strong>{item.title}</strong> at {item.company}<br />
+                  <span>{item.description}</span><br />
+                  <a href={item.link} target="_blank" rel="noreferrer">View Job</a>
+                </li>
+              )) : <li>No job recommendations available. Upload resume to see suggestions.</li>
+            }
+          </ul>
+        </div>
+
+        {!showAll && (recommendations.courses.length > 3 || recommendations.certifications.length > 3 || recommendations.jobs.length > 3) && (
+          <button 
+            className="show-more-btn"
+            onClick={() => setShowAll(true)}
+          >
+            Show All Recommendations
+          </button>
+        )}
       </section>
 
       <section>
@@ -655,8 +778,3 @@ const Dashboard = () => {
       <footer className="dashboard-footer">
         <p>&copy; {new Date().getFullYear()} Skillarly</p>
       </footer>
-    </div>
-  );
-};
-
-export default Dashboard;
