@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { getUser, getAuthToken, logout } from '../utils/auth';
 import { useNavigate } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 import './style.css';
 
 const Dashboard = () => {
