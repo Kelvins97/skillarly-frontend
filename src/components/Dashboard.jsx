@@ -104,7 +104,7 @@ const Dashboard = () => {
 
     try {
       const token = getAuthToken();
-      const response = await fetch(`${BACKEND_URL}/upload-resume`, {
+      const response = await fetch(`${BACKEND_URL}/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
