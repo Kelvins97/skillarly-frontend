@@ -778,3 +778,9 @@ const Dashboard = () => {
       <footer className="dashboard-footer">
         <p>&copy; {new Date().getFullYear()} Skillarly</p>
       </footer>
+         </div>
+  );
+};
+
+export default Dashboard;
+
