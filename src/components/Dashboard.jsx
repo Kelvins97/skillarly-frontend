@@ -639,7 +639,7 @@ const Dashboard = () => {
           <div className="payment-options">
             <label>
               <input type="radio" name="payment" value="stripe" defaultChecked /> 
-              <span>Stripe</span>
+              <span>Card</span>
             </label>
             <label>
               <input type="radio" name="payment" value="mpesa" /> 
