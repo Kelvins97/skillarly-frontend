@@ -725,8 +725,8 @@ const Dashboard = () => {
               <input type="radio" name="plan" value={planType} defaultChecked={planType === 'basic'} />
               <h3>{planType.charAt(0).toUpperCase() + planType.slice(1)}</h3>
               <p>
-                {planType === 'basic' ? 'Free – 2 recommendations/week' : 
-                 planType === 'pro' ? '$5/month – 10 recommendations' : 
+                {planType === 'basic' ? 'Free – 2 recommendations/Week' : 
+                 planType === 'pro' ? '$5/month – 10 recommendations/Week' : 
                  '$15/month – Unlimited'}
               </p>
               <div className="plan-features">
@@ -780,8 +780,8 @@ const Dashboard = () => {
         <p>&copy; {new Date().getFullYear()} Skillarly</p>
       </footer>
          </div>
-  );
+   );
+
 };
 
 export default Dashboard;
-
