@@ -372,6 +372,97 @@ body.dark li {
   font-size: 0.9rem;
   font-weight: 500;
 }
+/* Add these styles to your existing style.css file */
+
+/* Profile Header Layout */
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+/* Profile Image Container */
+.profile-image-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profile-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e1e5e9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.profile-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.profile-image-fallback {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #e1e5e9;
+  color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .profile-image-container {
+    order: -1;
+  }
+  
+  .profile-image,
+  .profile-image-fallback {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-header {
+    gap: 0.75rem;
+  }
+  
+  .profile-image,
+  .profile-image-fallback {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* Dark theme support */
+.dark .profile-image {
+  border-color: #404040;
+}
+
+.dark .profile-image-fallback {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  border-color: #404040;
+  color: #a0aec0;
+}
+
 
 /* Dark theme support for profile section */
 body.dark .profile-card {
