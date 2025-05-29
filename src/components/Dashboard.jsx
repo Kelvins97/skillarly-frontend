@@ -530,68 +530,95 @@ const Dashboard = () => {
         </div>
       )}
 
-      <section className="profile-section">
-        <h2>Profile Summary</h2>
-        <div className="profile-card">
-          <div className="profile-content">
-            <div className="resume-container">
-              {resumeFile || userData?.resumeUrl ? (
-                <div 
-                  className="resume-preview" 
-                  onClick={viewResume}
-                  style={{ cursor: 'pointer' }}
-                  title="Click to view resume"
-                >
-                  <div className="resume-icon">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                    </svg>
-                  </div>
-                  <p className="resume-filename">
-                    {resumeFile?.filename || userData?.resumeFilename || 'Resume'}
-                  </p>
-                  <span className="view-resume-text">Click to view</span>
-                </div>
-              ) : (
-                <div className="no-resume">
-                  <div className="resume-placeholder">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor" opacity="0.5">
-                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                    </svg>
-                  </div>
-                  <p>No resume uploaded</p>
-                </div>
-              )}
+      // Updated profile section in Dashboard.jsx
+// Replace the existing profile-section in your Dashboard component
+
+<section className="profile-section">
+  <h2>Profile Summary</h2>
+  <div className="profile-card">
+    <div className="profile-content">
+      <div className="resume-container">
+        {resumeFile || userData?.resumeUrl ? (
+          <div 
+            className="resume-preview" 
+            onClick={viewResume}
+            style={{ cursor: 'pointer' }}
+            title="Click to view resume"
+          >
+            <div className="resume-icon">
+              <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+              </svg>
             </div>
-            <div className="profile-details">
-              <div className="greeting-container">
-                <span className="greeting">{getTimeBasedGreeting()},</span>
-                <h3 className="user-name">{userData?.name || 'LinkedIn User'}</h3>
-              </div>
-              <p className="user-headline">{userData?.headline || 'Professional'}</p>
-              <p className="user-email">Email: {userData?.email}</p>
-              
-              <div className="resume-upload-section">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleResumeUpload}
-                  accept=".pdf,.doc,.docx"
-                  style={{ display: 'none' }}
-                />
-                <button 
-                  onClick={triggerFileUpload}
-                  disabled={isUploadingResume}
-                  className="upload-resume-btn"
-                >
-                  {isUploadingResume ? 'Uploading...' : (resumeFile || userData?.resumeUrl ? '📄 Update Resume' : '📄 Upload Resume')}
-                </button>
-                <p className="upload-hint">PDF, DOC, or DOCX (Max 5MB)</p>
-              </div>
+            <p className="resume-filename">
+              {resumeFile?.filename || userData?.resumeFilename || 'Resume'}
+            </p>
+            <span className="view-resume-text">Click to view</span>
+          </div>
+        ) : (
+          <div className="no-resume">
+            <div className="resume-placeholder">
+              <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor" opacity="0.5">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+              </svg>
+            </div>
+            <p>No resume uploaded</p>
+          </div>
+        )}
+      </div>
+      
+      <div className="profile-details">
+        <div className="profile-header">
+          <div className="profile-info">
+            <div className="greeting-container">
+              <span className="greeting">{getTimeBasedGreeting()},</span>
+              <h3 className="user-name">{userData?.name || 'LinkedIn User'}</h3>
+            </div>
+            <p className="user-headline">{userData?.headline || 'Professional'}</p>
+            <p className="user-email">Email: {userData?.email}</p>
+          </div>
+          
+          <div className="profile-image-container">
+            {userData?.profilepicture || userData?.picture ? (
+              <img 
+                src={userData?.profilepicture || userData?.picture} 
+                alt={`${userData?.name || 'User'}'s profile`}
+                className="profile-image"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className="profile-image-fallback" style={{ display: userData?.profilepicture || userData?.picture ? 'none' : 'flex' }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" opacity="0.6">
+                <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+              </svg>
             </div>
           </div>
         </div>
-      </section>
+        
+        <div className="resume-upload-section">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleResumeUpload}
+            accept=".pdf,.doc,.docx"
+            style={{ display: 'none' }}
+          />
+          <button 
+            onClick={triggerFileUpload}
+            disabled={isUploadingResume}
+            className="upload-resume-btn"
+          >
+            {isUploadingResume ? 'Uploading...' : (resumeFile || userData?.resumeUrl ? '📄 Update Resume' : '📄 Upload Resume')}
+          </button>
+          <p className="upload-hint">PDF, DOC, or DOCX (Max 5MB)</p>
+        </div>
+      </div>
+    </div>
+   </div>
+  </section>
 
       <section id="skills-analysis">
         <h2>Skills Analysis</h2>
