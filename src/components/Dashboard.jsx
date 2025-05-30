@@ -603,15 +603,7 @@ const Dashboard = () => {
     </div>
     </div>
 
-    const debugProfileImage = () => {
-    console.log('Profile image debug:', {
-    profilepicture: userData?.profilepicture,
-    picture: userData?.picture,
-    profile_picture: userData?.profile_picture,
-    all_userData: userData
-    });
-    }
-        
+  
         <div className="resume-upload-section">
           <input
             type="file"
