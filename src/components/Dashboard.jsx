@@ -575,24 +575,42 @@ const Dashboard = () => {
           </div>
           
           <div className="profile-image-container">
-            {userData?.profilepicture || userData?.picture ? (
-              <img 
-                src={userData?.profilepicture || userData?.picture} 
-                alt={`${userData?.name || 'User'}'s profile`}
-                className="profile-image"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextElementSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div className="profile-image-fallback" style={{ display: userData?.profilepicture || userData?.picture ? 'none' : 'flex' }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" opacity="0.6">
-                <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
-              </svg>
-            </div>
-           </div>
-          </div>
+          {(userData?.profilepicture || userData?.picture || userData?.profile_picture) ? (
+          <img src={userData?.profilepicture || userData?.picture || userData?.profile_picture} 
+         alt={`${userData?.name || 'User'}'s profile`}
+         className="profile-image"
+         crossOrigin="anonymous"
+         referrerPolicy="no-referrer"
+         onLoad={(e) => {
+         console.log('Profile image loaded successfully:', e.target.src);
+        }}
+        onError={(e) => {
+        console.error('Profile image failed to load:', e.target.src);
+        e.target.style.display = 'none';
+        e.target.nextElementSibling.style.display = 'flex';
+       }}
+       />
+       ) : null}
+       <div 
+      className="profile-image-fallback" 
+      style={{ 
+      display: (userData?.profilepicture || userData?.picture || userData?.profile_picture) ? 'none' : 'flex' 
+     }}
+     >
+     <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" opacity="0.6">
+      <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+    </svg>
+    </div>
+    </div>
+
+    const debugProfileImage = () => {
+    console.log('Profile image debug:', {
+    profilepicture: userData?.profilepicture,
+    picture: userData?.picture,
+    profile_picture: userData?.profile_picture,
+    all_userData: userData
+    });
+    };
         
         <div className="resume-upload-section">
           <input
