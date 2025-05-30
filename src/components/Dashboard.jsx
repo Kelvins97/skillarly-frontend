@@ -610,7 +610,7 @@ const Dashboard = () => {
     profile_picture: userData?.profile_picture,
     all_userData: userData
     });
-    };
+    }
         
         <div className="resume-upload-section">
           <input
